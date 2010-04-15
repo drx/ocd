@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------
 
 tokens = (
-    'ADD0',
+    'ADD0',#prawdopodobnie zmienic nazwy na mówiace coś o typach
     'ADD1',
     'ADD2',
     'ADD3',
