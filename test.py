@@ -12,8 +12,7 @@ while off != len(data):
     try:
             p = Opcode(buf[off:])
             result.append( p.getOpcode(FORMAT) )
-            #print " %08X:   %s" % (off, p.printOpcode(FORMAT))
-            off+=p.getSize()
+            off += p.getSize()
     except:
             break
 
