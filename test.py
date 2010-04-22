@@ -1,5 +1,20 @@
 from libdisassemble.disassemble import *
 
-data = "\xeb\xfe"
-p = Opcode(data)
-print p.getOpcode("AT&T")
+data = "\xeb\xfe\xeb\x00"
+
+buf = data
+FORMAT="AT&T"
+off = 0
+
+
+result = []
+while off != len(data):
+    try:
+            p = Opcode(buf[off:])
+            result.append( p.getOpcode(FORMAT) )
+            #print " %08X:   %s" % (off, p.printOpcode(FORMAT))
+            off+=p.getSize()
+    except:
+            break
+
+print result

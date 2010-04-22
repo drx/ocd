@@ -559,7 +559,7 @@ class Opcode:
         else:
             result=Register(reg+reg_type, type_flag)
             count=0
-            
+           
         return (count, result)
     # FIX:
     #   
