@@ -3,7 +3,7 @@ from libdisassemble.disassemble import *
 data = "\xeb\xfe\xeb\x00"
 
 buf = data
-FORMAT="AT&T"
+FORMAT="INTEL"
 off = 0
 
 
