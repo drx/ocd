@@ -14,6 +14,11 @@ decompile_table = [
 ('aesdec', '{i[1]} = _mm_aesdec({i[1]},{i[2]});'),
 ('aesdeclast', '{i[1]} = _mm_aesdeclast({i[1]},{i[2]});'),
 ('aesenc', '{i[1]} = _mm_aesenc({i[1]},{i[2]});'),
+('aesdeclast', '{i[1]} = _mm_aesendlast({i[1]},{i[2]});'),
+('aesimc', '{i[1]} = _mm_aesimc({i[2]});'),
+('aeskeygenassist', '{i[1]} = _mm_aesimc({i[1]},{i[2]});'),
+('and', '{i[1]} &= {i[2]};'),
+
 ('dec', '{i[1]}--;'),
 ('mov', '{i[1]} = {i[2]};')
 ]
