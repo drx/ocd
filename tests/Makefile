@@ -1,6 +1,6 @@
 ZAD	= test1
 CC	= gcc
-CFLAGS	=-std=c99 -Wall -W -O0 -static -lm
+CFLAGS	=-std=c99 -Wall -W -O0
 
 all:	$(ZAD)
 
