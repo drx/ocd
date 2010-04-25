@@ -100,10 +100,11 @@ class Address(Mode):
         self.signed=signed
         self.length  = length
         #print "'%s' %d %x, %s"%(data, length, type, relative)
+        fmt = "<"
         if self.signed:
-            fmt = ("b", "h", "l")[length/2]
+            fmt += ("b", "h", "l")[length/2]
         else:
-            fmt = ("B", "H", "L")[length/2]
+            fmt += ("B", "H", "L")[length/2]
         
         if (self.getAddrMeth() ==  opcode86.ADDRMETH_A):
             fmt += "H"
