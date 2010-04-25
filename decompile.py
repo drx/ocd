@@ -1,6 +1,21 @@
 decompile_table = [
+('aaa', 'BCD_AAA();'),
+('aad', 'BCD_AAD();'),
+('aam', 'BCD_AAM();'),
+('aas', 'BCD_AAS();'),
+('adc', '{i[1]} += {i[2]} + {cf};'),
+('add', '{i[1]} += {i[2]};'),
+('addpd', '{i[1]} = _mm_add_pd({i[1]},{i[2]});'),
+('addps', '{i[1]} = _mm_add_ps({i[1]},{i[2]});'),
+('addsd', '{i[1]} = _mm_add_sd({i[1]},{i[2]});'),
+('addss', '{i[1]} = _mm_add_ss({i[1]},{i[2]});'),
+('addsubpd', '{i[1]} = _mm_addsub_pd({i[1]},{i[2]});'),
+('addsubps', '{i[1]} = _mm_addsub_ps({i[1]},{i[2]});'),
+('aesdec', '{i[1]} = _mm_aesdec({i[1]},{i[2]});'),
+('aesdeclast', '{i[1]} = _mm_aesdeclast({i[1]},{i[2]});'),
+('aesenc', '{i[1]} = _mm_aesenc({i[1]},{i[2]});'),
 ('dec', '{i[1]}--;'),
-('mov', '{i[1]} = {i[2]};'),
+('mov', '{i[1]} = {i[2]};')
 ]
 
 def find(f, seq):
