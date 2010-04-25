@@ -1,8 +1,6 @@
 #!/usr/bin/env python
+from disassemble import disassemble
 
-from libdisassemble.disassemble import *
-
-#data = "\xeb\xfe\xeb\x00"
 if __name__=="__main__":
     import sys
     if len(sys.argv) < 4:
@@ -18,16 +16,5 @@ if __name__=="__main__":
     f.seek(offset)
     buf = f.read(int(sys.argv[3], 16))
 
-    FORMAT="INTEL"
-    off = 0
+    print disassemble(buf)
 
-    result = []
-    while off != len(buf):
-        try:
-            p = Opcode(buf[off:])
-            result.append( p.getOpcode(FORMAT) )
-            off += p.getSize()
-        except:
-            break
-    
-    print result
