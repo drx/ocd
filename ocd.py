@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from disassemble import disassemble
+from decompile import decompile_function
 
 if __name__=="__main__":
     import sys
@@ -16,5 +17,5 @@ if __name__=="__main__":
     f.seek(offset)
     buf = f.read(int(sys.argv[3], 16))
 
-    print disassemble(buf)
+    print decompile_function(disassemble(buf), 'main')
 
