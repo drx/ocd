@@ -81,7 +81,11 @@ decompile_table = [
 ('clc', '{cf} = 0;}',None),
 ('cld', '{df} = 0;}',None),
 ('clflush', '_mm_clflush({i[1]});',None),
-#('cli', - many lines
+#('cli', - many lines of code to which tools don't exist yet
+('clts', '{cr0.ts[3] = 0}', None),
+('cmc', '{eflags.cf[0]} = ~{eflags.cf[0]}', None),
+#('cmovcc - is wildcard available here? many variations of the name
+
 ('dec', '{i[1]}--;',None),
 ('jmp', 'goto loc_{extra:x};', lambda env: env['loc']+env['length']+int(env['ins'][1],16)),
 ('mov', '{i[1]} = {i[2]};',None),
