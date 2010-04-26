@@ -28,7 +28,7 @@ decompile_table = [
 ('blendvpd', '{i[1]} = _mm_blendv_pd({i[1]},{i[2]},{i[2]});'),
 ('blendvps', '{i[1]} = _mm_blendv_ps({i[1]},{i[2]},{i[2]});'),
 ('bound', 'if({i[1]}<{i[2][0:15]}||{i[1]}>{i[2][16:31]}){#br};'),#32 and 64bit - have to add some unified variable divider
-('bsf', 'if(!{i[2]})\n
+('bsf', '''if(!{i[2]})\n
         {zf} = 1;\n
     else\n
     \{\n
@@ -39,7 +39,7 @@ decompile_table = [
             {temp}++;\n
             {i[1]}={temp};
         \}\n
-    \}\n'#temporary variable names stream needed
+    \}\n'''),#temporary variable names stream needed
 ('dec', '{i[1]}--;'),
 ('mov', '{i[1]} = {i[2]};')
 ]
