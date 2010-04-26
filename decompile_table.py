@@ -92,7 +92,7 @@ decompile_table = [
 ]
 
 def bitlen( op ):
-    return 8 * (len( str( op ))- 2))
+    return 8 * (len( str( op ))- 2)
 #is it a workaround? I hope so...
 
 
