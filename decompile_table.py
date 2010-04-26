@@ -23,11 +23,11 @@ decompile_table = [
 ('andnpd', '{i[1]} = _mm_andnot_pd({i[1]},{i[2]});',None),
 ('andnps', '{i[1]} = _mm_andnot_ps({i[1]},{i[2]});',None),
 #('arpl', - some weird things - x86 is the stuff
-('blendpd', '{i[1]} = _mm_blend_pd({i[1]},{i[2]},{i[2]});'),
-('blendps', '{i[1]} = _mm_blend_ps({i[1]},{i[2]},{i[2]});'),
-('blendvpd', '{i[1]} = _mm_blendv_pd({i[1]},{i[2]},{i[2]});'),
-('blendvps', '{i[1]} = _mm_blendv_ps({i[1]},{i[2]},{i[2]});'),
-('bound', 'if({i[1]}<{i[2][0:15]}||{i[1]}>{i[2][16:31]}){#br};'),#32 and 64bit - have to add some unified variable divider
+('blendpd', '{i[1]} = _mm_blend_pd({i[1]},{i[2]},{i[2]});',None),
+('blendps', '{i[1]} = _mm_blend_ps({i[1]},{i[2]},{i[2]});',None),
+('blendvpd', '{i[1]} = _mm_blendv_pd({i[1]},{i[2]},{i[2]});',None),
+('blendvps', '{i[1]} = _mm_blendv_ps({i[1]},{i[2]},{i[2]});',None),
+('bound', 'if({i[1]}<{i[2][0:15]}||{i[1]}>{i[2][16:31]}){#br};',None),#32 and 64bit - have to add some unified variable divider
 ('bsf','''
     if(!{i[2]})
         {zf} = 1;
@@ -41,7 +41,7 @@ decompile_table = [
             {i[1]}={temp};
         \}
     \}
-    '''),#temporary variable names stream needed
+    ''',None),#temporary variable names stream needed
 ('bsr', '''
     if(!{i[2]})
         {zf} = 1;
@@ -55,21 +55,21 @@ decompile_table = [
             {i[1]}={temp};
         \}
     \}
-    '''),#bit size of operand needed
+    ''',None),#bit size of operand needed
 #('bitswap', - dividing operands in four
-('bt', '{cf} = {i[1][{i[2]}]};'),
+('bt', '{cf} = {i[1][{i[2]}]};',None),
 ('btc', '''
     {cf} = {i[1][{i[2]}]};
     {i[1][{i[2]}]} = ~{i[1][{i[2]}]};
-    '''),
+    ''', None),
 ('btr', '''
     {cf} = {i[1][{i[2]}]};
     {i[1][{i[2]}]} = 0;
-    '''),
+    ''', None),
 ('bts', '''
     {cf} = {i[1][{i[2]}]};
     {i[1][{i[2]}]} = 1;
-    '''),
+    ''', None),
 #('call' - lol'd
 #('cbw', '''
 #    '''),
@@ -78,12 +78,12 @@ decompile_table = [
 #('cdqe', '''
 #    ''') 
 # operand length dependent
-('clc', '{cf} = 0;}'),
-('cld', '{df} = 0;}'),
-('clflush', '_mm_clflush({i[1]});'),
+('clc', '{cf} = 0;}',None),
+('cld', '{df} = 0;}',None),
+('clflush', '_mm_clflush({i[1]});',None),
 #('cli', - many lines
 ('dec', '{i[1]}--;',None),
 ('jmp', 'goto loc_{extra:x};', lambda env: env['loc']+env['length']+int(env['ins'][1],16)),
-('mov', '{i[1]} = {i[2]};',None)
+('mov', '{i[1]} = {i[2]};',None),
 ]
 
