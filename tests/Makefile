@@ -1,5 +1,5 @@
 CC	= gcc
-CFLAGS	= -std=c99 -Wall -W -O0
+CFLAGS	= -std=c99 -Wall -W -O
 
 SOURCES := $(wildcard *.c)
 BINARIES := $(patsubst %.c, %, $(SOURCES))
