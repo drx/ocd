@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 from disassemble import disassemble
-from decompile import decompile_function
+from decompile import decompile_functions
 from debug import debug_start
 
 from subprocess import Popen, PIPE
 
 def objdump(filename):
-    print filename
     p1 = Popen(["objdump", "-h", filename], stdout=PIPE)
     p2 = Popen(["awk", "-f", "sections.awk"], stdin=p1.stdout, stdout=PIPE)
     sections_p = p2.communicate()[0].split()
@@ -47,7 +46,10 @@ if __name__=="__main__":
 
     f = open(filename)
 
+    functions = {}
+
     for name, symbol in symbols.iteritems():
         f.seek(symbol['start']-text['virt']+text['start'])
-        buf = f.read(symbol['length'])
-        print decompile_function(disassemble(buf, symbol['start']), name)
+        functions[name] = disassemble(f.read(symbol['length']), symbol['start'])
+
+    print decompile_functions(functions, symbols)
