@@ -28,31 +28,34 @@ decompile_table = [
 ('blendvpd', '{i[1]} = _mm_blendv_pd({i[1]},{i[2]},{i[2]});'),
 ('blendvps', '{i[1]} = _mm_blendv_ps({i[1]},{i[2]},{i[2]});'),
 ('bound', 'if({i[1]}<{i[2][0:15]}||{i[1]}>{i[2][16:31]}){#br};'),#32 and 64bit - have to add some unified variable divider
-('bsf', '''if(!{i[2]})\n
-        {zf} = 1;\n
-    else\n
-    \{\n
-        {zf} = 0;\n
-        int {temp} = 0;\n
-        while({i[2][{temp}]==0)\n
-        \{\n
-            {temp}++;\n
+('bsf','''
+    if(!{i[2]})
+        {zf} = 1;
+    else
+    \{
+        {zf} = 0;
+        int {temp} = 0;
+        while({i[2][{temp}]==0)
+        \{
+            {temp}++;
             {i[1]}={temp};
-        \}\n
-    \}\n'''),#temporary variable names stream needed
-('bsr', '''if(!{i[2]})\n
-        {zf} = 1;\n
-    else\n
-    \{\n
-        {zf} = 0;\n
-        int {temp} = {i[2].size}-1;\n
-        while({i[2][{temp}]==0)\n
-        \{\n
-            {temp}--;\n
+        \}
+    \}
+    '''),#temporary variable names stream needed
+('bsr', '''
+    if(!{i[2]})
+        {zf} = 1;
+    else
+    \{
+        {zf} = 0;
+        int {temp} = {i[2].size}-1;
+        while({i[2][{temp}]==0)
+        \{
+            {temp}--;
             {i[1]}={temp};
-        \}\n
-    \}\n'''),#bit size of operand needed
-
+        \}
+    \}
+    '''),#bit size of operand needed
 ('dec', '{i[1]}--;'),
 ('mov', '{i[1]} = {i[2]};')
 ]
