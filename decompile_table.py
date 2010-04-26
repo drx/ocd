@@ -91,3 +91,9 @@ decompile_table = [
 ('mov', '{i[1]} = {i[2]};',None),
 ]
 
+def bitlen( op ):
+    return 8 * (len( str( op ) - 2))
+#is it a workaround? I hope so...
+
+
+
