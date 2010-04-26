@@ -1,3 +1,6 @@
+from debug import debug
+from binascii import hexlify
+
 decompile_table = [
 ('aaa', 'BCD_AAA();'),
 ('aad', 'BCD_AAD();'),
@@ -65,10 +68,12 @@ def find(f, seq):
 
 def decompile(ins):
     try:
-        i, fmt = find(lambda t: t[0] == ins[0], decompile_table)
-        return fmt.format(i=ins)
+        i, fmt = find(lambda t: t[0] == ins['ins'][0], decompile_table)
     except LookupError:
-        return '//' + ' '.join(ins)
+        fmt = '// {instr}'
+
+    fmt += debug('\t\t/* {loc:x}: {length} ({bin}) */')
+    return fmt.format(i=ins['ins'], loc=ins['loc'], length=ins['length'], bin=hexlify(ins['bin']), instr=' '.join(ins['ins']))
 
 def infer_signature(asm):
     return ('int', [])
