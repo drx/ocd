@@ -56,7 +56,34 @@ decompile_table = [
         \}
     \}
     '''),#bit size of operand needed
+#('bitswap', - dividing operands in four
+('bt', '{cf} = {i[1][{i[2]}]};'),
+('btc', '''
+    {cf} = {i[1][{i[2]}]};
+    {i[1][{i[2]}]} = ~{i[1][{i[2]}]};
+    '''),
+('btr', '''
+    {cf} = {i[1][{i[2]}]};
+    {i[1][{i[2]}]} = 0;
+    '''),
+('bts', '''
+    {cf} = {i[1][{i[2]}]};
+    {i[1][{i[2]}]} = 1;
+    '''),
 ('dec', '{i[1]}--;'),
-('mov', '{i[1]} = {i[2]};')
+('mov', '{i[1]} = {i[2]};'),
+#('call' - lol'd
+#('cbw', '''
+#    '''),
+#('cwde', '''
+#    '''),
+#('cdqe', '''
+#    ''') 
+# operand length dependent
+('clc', '{cf} = 0;}'),
+('cld', '{df} = 0;}'),
+('clflush', '_mm_clflush({i[1]});'),
+#('cli', - many lines
+
 ]
 
