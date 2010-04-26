@@ -39,7 +39,22 @@ decompile_table = [
             {temp}++;\n
             {i[1]}={temp};
         \}\n
-    \}\n'#temporary variable names stream needed
+    \}\n'),#temporary variable names stream needed
+('bsr', 'if(!{i[2]})\n
+        {zf} = 1;\n
+    else\n
+    \{\n
+        {zf} = 0;\n
+        int {temp} = {i[2].size}-1;\n
+        while({i[2][{temp}]==0)\n
+        \{\n
+            {temp}--;\n
+            {i[1]}={temp};
+        \}\n
+    \}\n'),#bit size of operand needed
+
+
+
 ('dec', '{i[1]}--;'),
 ('mov', '{i[1]} = {i[2]};')
 ]
