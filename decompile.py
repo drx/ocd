@@ -40,7 +40,7 @@ decompile_table = [
             {i[1]}={temp};
         \}\n
     \}\n'''),#temporary variable names stream needed
-('bsr', 'if(!{i[2]})\n
+('bsr', '''if(!{i[2]})\n
         {zf} = 1;\n
     else\n
     \{\n
@@ -51,11 +51,8 @@ decompile_table = [
             {temp}--;\n
             {i[1]}={temp};
         \}\n
-    \}\n'),#bit size of operand needed
+    \}\n'''),#bit size of operand needed
 
-
-
->>>>>>> 07c32672fc83a32c0cd548ab87b362aed64a1e2c:decompile.py
 ('dec', '{i[1]}--;'),
 ('mov', '{i[1]} = {i[2]};')
 ]
