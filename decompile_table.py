@@ -53,7 +53,6 @@ decompile_table = [
         \{
             {temp}--;
             {i[1]}={temp};
-<<<<<<< HEAD
         \}
     \}
     '''),#bit size of operand needed
