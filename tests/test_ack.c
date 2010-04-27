@@ -1,6 +1,6 @@
 int main()
 {
-	printf("%d", ack(3, 4) );
+	printf("%d\n", ack(3, 4) );
 }
 
 int ack(int m, int n)
