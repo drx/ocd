@@ -232,23 +232,24 @@ cpu_PENTIUM2=     0x00009000
 x86_MAIN =0
 x86_0F   =1
 x86_80   =2
-                                                                                
-REG_DWORD_OFFSET= 0         # OK, now wtf does this mean?
-REG_WORD_OFFSET =1 * 8      # and this?
-REG_BYTE_OFFSET =2 * 8      # and this?
-REG_MMX_OFFSET  =3 * 8
-REG_SIMD_OFFSET =4 * 8
-REG_DEBUG_OFFSET= 5 * 8
-REG_CTRL_OFFSET =6 * 8
-REG_TEST_OFFSET =7 * 8
-REG_SEG_OFFSET =8 * 8
-REG_FPU_OFFSET =9 * 8
-REG_FLAGS_INDEX =10 * 8
-REG_FPCTRL_INDEX =10 * 8 + 1
-REG_FPSTATUS_INDEX =10 * 8 + 2
-REG_FPTAG_INDEX =10 * 8 + 3
-REG_EIP_INDEX =10 * 8 + 4
-REG_IP_INDEX =10 * 8 + 5
+                     
+REG_QWORD_OFFSET = 0*16
+REG_DWORD_OFFSET = 1*16
+REG_WORD_OFFSET = 2*16
+REG_BYTE_OFFSET = 3*16
+REG_MMX_OFFSET  = 3*16+8
+REG_SIMD_OFFSET = 4*16
+REG_DEBUG_OFFSET= 5*16
+REG_CTRL_OFFSET = 6*16
+REG_TEST_OFFSET = 7*16
+REG_SEG_OFFSET = 7*16+8
+REG_FPU_OFFSET = 8*16
+REG_FLAGS_INDEX = 8*16+8
+REG_FPCTRL_INDEX = 8*16 + 1
+REG_FPSTATUS_INDEX = 8*16 + 2
+REG_FPTAG_INDEX = 8*16 + 3
+REG_EIP_INDEX = 8*16 + 4
+REG_IP_INDEX = 8*16 + 5
 
 
 """
@@ -2935,6 +2936,23 @@ tables86=[
 ]
 
 regs=[
+        ("rax", "REG_GENERAL,REG_RET", 8),
+        ("rcx", "REG_GENERAL,REG_COUNT", 8),
+        ("rdx", "REG_GENERAL", 8),
+        ("rbx", "REG_GENERAL", 8),
+        ("rsp", "REG_SP", 8),
+        ("rbp", "REG_GENERAL,REG_FP", 8),
+        ("rsi", "REG_GENERAL,REG_SRC", 8),
+        ("rdi", "REG_GENERAL,REG_DEST", 8),
+        ("r8", "REG_GENERAL", 8),
+        ("r9", "REG_GENERAL", 8),
+        ("r10", "REG_GENERAL", 8),
+        ("r11", "REG_GENERAL", 8),
+        ("r12", "REG_GENERAL", 8),
+        ("r13", "REG_GENERAL", 8),
+        ("r14", "REG_GENERAL", 8),
+        ("r15", "REG_GENERAL", 8),
+
         ("eax", "REG_GENERAL,REG_RET", 4),
         ("ecx", "REG_GENERAL,REG_COUNT", 4),
         ("edx", "REG_GENERAL", 4),
@@ -2943,6 +2961,15 @@ regs=[
         ("ebp", "REG_GENERAL,REG_FP", 4),
         ("esi", "REG_GENERAL,REG_SRC", 4),
         ("edi", "REG_GENERAL,REG_DEST", 4),
+        ("r8d", "REG_GENERAL", 4),
+        ("r9d", "REG_GENERAL", 4),
+        ("r10d", "REG_GENERAL", 4),
+        ("r11d", "REG_GENERAL", 4),
+        ("r12d", "REG_GENERAL", 4),
+        ("r13d", "REG_GENERAL", 4),
+        ("r14d", "REG_GENERAL", 4),
+        ("r15d", "REG_GENERAL", 4),
+
         ("ax", "REG_GENERAL,REG_RET", 2),
         ("cx", "REG_GENERAL,REG_COUNT", 2),
         ("dx", "REG_GENERAL", 2),
@@ -2951,6 +2978,15 @@ regs=[
         ("bp", "REG_GENERAL,REG_FP", 2),
         ("si", "REG_GENERAL,REG_SRC", 2),
         ("di", "REG_GENERAL,REG_DEST", 2),
+        ("r8w", "REG_GENERAL", 2),
+        ("r9w", "REG_GENERAL", 2),
+        ("r10w", "REG_GENERAL", 2),
+        ("r11w", "REG_GENERAL", 2),
+        ("r12w", "REG_GENERAL", 2),
+        ("r13w", "REG_GENERAL", 2),
+        ("r14w", "REG_GENERAL", 2),
+        ("r15w", "REG_GENERAL", 2),
+
         ("al", "REG_GENERAL", 1),
         ("cl", "REG_GENERAL", 1),
         ("dl", "REG_GENERAL", 1),
@@ -2959,6 +2995,15 @@ regs=[
         ("ch", "REG_GENERAL", 1),
         ("dh", "REG_GENERAL", 1),
         ("bh", "REG_GENERAL", 1),
+        ("r8l", "REG_GENERAL", 1),
+        ("r9l", "REG_GENERAL", 1),
+        ("r10l", "REG_GENERAL", 1),
+        ("r11l", "REG_GENERAL", 1),
+        ("r12l", "REG_GENERAL", 1),
+        ("r13l", "REG_GENERAL", 1),
+        ("r14l", "REG_GENERAL", 1),
+        ("r15l", "REG_GENERAL", 1),
+
         ("mm0", "REG_SIMD", 4),
         ("mm1", "REG_SIMD", 4),
         ("mm2", "REG_SIMD", 4),
@@ -2967,6 +3012,7 @@ regs=[
         ("mm5", "REG_SIMD", 4),
         ("mm6", "REG_SIMD", 4),
         ("mm7", "REG_SIMD", 4),
+
         ("xmm0", "REG_SIMD", 4),
         ("xmm1", "REG_SIMD", 4),
         ("xmm2", "REG_SIMD", 4),
@@ -2975,6 +3021,15 @@ regs=[
         ("xmm5", "REG_SIMD", 4),
         ("xmm6", "REG_SIMD", 4),
         ("xmm7", "REG_SIMD", 4),
+        ("xmm8", "REG_SIMD", 4),
+        ("xmm9", "REG_SIMD", 4),
+        ("xmm10", "REG_SIMD", 4),
+        ("xmm11", "REG_SIMD", 4),
+        ("xmm12", "REG_SIMD", 4),
+        ("xmm13", "REG_SIMD", 4),
+        ("xmm14", "REG_SIMD", 4),
+        ("xmm15", "REG_SIMD", 4),
+
         ("dr0", "REG_DEBUG", 4),
         ("dr1", "REG_DEBUG", 4),
         ("dr2", "REG_DEBUG", 4),
@@ -2983,6 +3038,15 @@ regs=[
         ("dr5", "REG_DEBUG", 4),
         ("dr6", "REG_DEBUG,REG_SYS", 4),
         ("dr7", "REG_DEBUG,REG_SYS", 4),
+        ("dr8", "REG_DEBUG", 4),
+        ("dr9", "REG_DEBUG", 4),
+        ("dr10", "REG_DEBUG", 4),
+        ("dr11", "REG_DEBUG", 4),
+        ("dr12", "REG_DEBUG", 4),
+        ("dr13", "REG_DEBUG", 4),
+        ("dr14", "REG_DEBUG,REG_SYS", 4),
+        ("dr15", "REG_DEBUG,REG_SYS", 4),
+
         ("cr0", "REG_SYS", 4),
         ("cr1", "REG_SYS", 4),
         ("cr2", "REG_SYS", 4),
@@ -2991,6 +3055,15 @@ regs=[
         ("cr5", "REG_SYS", 4),
         ("cr6", "REG_SYS", 4),
         ("cr7", "REG_SYS", 4),
+        ("cr8", "REG_SYS", 4),
+        ("cr9", "REG_SYS", 4),
+        ("cr10", "REG_SYS", 4),
+        ("cr11", "REG_SYS", 4),
+        ("cr12", "REG_SYS", 4),
+        ("cr14", "REG_SYS", 4),
+        ("cr15", "REG_SYS", 4),
+        ("cr7", "REG_SYS", 4),
+
         ("tr0", "REG_SYS", 4),
         ("tr1", "REG_SYS", 4),
         ("tr2", "REG_SYS", 4),
@@ -2999,6 +3072,7 @@ regs=[
         ("tr5", "REG_SYS", 4),
         ("tr6", "REG_SYS", 4),
         ("tr7", "REG_SYS", 4),
+
         ("es", "REG_DATASEG", 2),
         ("cs", "REG_CODESEG", 2),
         ("ss", "REG_STACKSEG", 2),
@@ -3007,6 +3081,7 @@ regs=[
         ("gs", "REG_DATASEG", 2),
         (" ", "REG_INVALID", 0),
         (" ", "REG_INVALID", 0),
+
         ("st(0)", "REG_FPU", "OPSIZE_FPREG"),
         ("st(1)", "REG_FPU", "OPSIZE_FPREG"),
         ("st(2)", "REG_FPU", "OPSIZE_FPREG"),

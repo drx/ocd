@@ -330,7 +330,6 @@ class Opcode:
                 else:
                     genreg= opcode86.REG_DWORD_OFFSET
     
-    
                 # Begin hashing on the ADDRMETH for this operand.  This should determine the number of bytes to advance in the data.
                 if addr_meth == opcode86.ADDRMETH_E:
                     ret=self.get_modrm(self.data[self.off:], opcode86.MODRM_EA, genreg, self.addr_size, tmp)  
@@ -404,7 +403,14 @@ class Opcode:
     
                 else:
                     if tmp & opcode86.OP_REG:
-                        ret = (0, Register(ptr[5+a], tmp))
+                        regoff = 0
+                        if self.mode == 64 and self.opcodetype in [opcode86.INS_PUSH, opcode86.INS_POP]:
+                            regoff = opcode86.REG_QWORD_OFFSET - opcode86.REG_DWORD_OFFSET
+                        if self.rex('w'):
+                            regoff -= 16
+                        if self.rex('b'):
+                            regoff += 8
+                        ret = (0, Register(ptr[5+a]+regoff, tmp))
                     elif tmp & opcode86.OP_IMM:
                         ret = (0, Address("%c"%ptr[5+a], 1, signed=0))
                     else:
@@ -505,12 +511,16 @@ class Opcode:
             base2   = Address(data[1:], 4)
             count += 4
         else:
-            base2 = Register(base)
+            if self.rex('b'):
+                base += 8
+            base2 = Register(base + 16)
 
         index2=None
         # Yeah, i know, this is really ugly
         if index != 4: # ESP
-            index2=Register( index)
+            if self.rex('x'):
+                index += 8
+            index2=Register( index + 16)
         else:
             scale = 0
         s= SIB( 1<<scale, base2, index2)
@@ -531,9 +541,19 @@ class Opcode:
         disp   = None
         base   = None
 
+        rmoff = 0
+        regoff = 0
+        if self.rex('w'):
+            rmoff -= 16
+            regoff -= 16
+        if self.rex('b'):
+            rmoff += 8
+        if self.rex('r'):
+            regoff += 8 
+
         if flags == opcode86.MODRM_EA:
             if   mod == 3:  # 11
-                result=Register(rm+reg_type, type_flag)
+                result=Register(rm+reg_type+rmoff, type_flag)
             elif mod == 0:  #  0
                 if rm == 5:
                     disp= Address(data[count:], self.addr_size, type_flag)
@@ -543,7 +563,7 @@ class Opcode:
                     count+=tmpcount
                 else:
                     #print ("mod:%d\t reg:%d\t rm:%d"%(mod,reg,rm))
-                    base=Register(rm, type_flag)
+                    base=Register(rm+reg_type+rmoff, type_flag)
             else:
                 
                 if rm ==4:
@@ -552,7 +572,7 @@ class Opcode:
                     count+=tmpcount
                 else:
                     disp_base = 1
-                    base=Register(rm, type_flag)
+                    base=Register(rm+reg_type+rmoff, type_flag)
                 #print ">BASE: %s" % base.printOpcode()
                 if mod == 01:
                     disp= Address(data[disp_base:], 1, type_flag)
@@ -563,7 +583,7 @@ class Opcode:
             if disp or base:
                 result=Expression(disp, base, type_flag)
         else:
-            result=Register(reg+reg_type, type_flag)
+            result=Register(reg+reg_type+regoff, type_flag)
             count=0
            
         return (count, result)
@@ -639,6 +659,33 @@ class Opcode:
         else:
             return "%-08s" % (prefix+opcode[0])		
         return tmp
+    def rex(self, f):
+        if self.mode != 64:
+            return False
+        b, w, x, r = False, False, False, False
+        for a in self.prefix:
+            type = a.getType()
+            if type & opcode86.PREFIX_REX:
+                if type & opcode86.PREFIX_REXB:
+                    b = True
+                if type & opcode86.PREFIX_REXW:
+                    w = True
+                if type & opcode86.PREFIX_REXX:
+                    x = True
+                if type & opcode86.PREFIX_REXR:
+                    r = True
+
+        if f == 'w':
+            return w
+        if f == 'x':
+            return x
+        if f == 'b':
+            return b
+        if f == 'r':
+            return r
+
+        return False
+            
     def getPrefix(self):
         prefix=""
         for a in self.prefix:
