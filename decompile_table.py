@@ -84,10 +84,44 @@ decompile_table = [
 #('cli', - many lines of code to which tools don't exist yet
 ('clts', '{cr0.ts[3] = 0}', None),
 ('cmc', '{eflags.cf[0]} = ~{eflags.cf[0]}', None),
+('cmp', 'cmp = {i[1]} - {i[2]};', None),
 #('cmovcc - is wildcard available here? many variations of the name
 
 ('dec', '{i[1]}--;',None),
-('jmp', 'goto loc_{extra:x};', lambda env: env['loc']+env['length']+int(env['ins'][1],16)),
+('ja', 'if (cmp > 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jae', 'if (cmp >= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jb', 'if (cmp < 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jbe', 'if (cmp <= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jc', 'if (cmp <= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jcxz', 'if (!{cx}) goto loc_{extra:x};', lambda env: jump(env)),
+('jecxz', 'if (!{ecx}) goto loc_{extra:x};', lambda env: jump(env)),
+('jrcxz', 'if (!{rcx}) goto loc_{extra:x};', lambda env: jump(env)),
+('je', 'if (!cmp) goto loc_{extra:x};', lambda env: jump(env)),
+('jg', 'if (cmp > 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jge', 'if (cmp >= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jl', 'if (cmp < 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jle', 'if (cmp <= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jna', 'if (cmp <= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jnae', 'if (cmp < 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jnb', 'if (cmp >= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jnbe', 'if (cmp > 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jnc', 'if (cmp >= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jne', 'if (!cmp) goto loc_{extra:x};', lambda env: jump(env)),
+('jng', 'if (cmp <= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jnge', 'if (cmp < 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jnl', 'if (cmp >= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jnle', 'if (cmp > 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jno', 'if (no_overflow) goto loc_{extra:x};', lambda env: jump(env)),
+('jnp', 'if (cmp & 1) goto loc_{extra:x};', lambda env: jump(env)),
+('jns', 'if ((cmp>0)-(cmp<0) == -1) goto loc_{extra:x};', lambda env: jump(env)),
+('jo', 'if (overflow) goto loc_{extra:x};', lambda env: jump(env)),
+('jp', 'if (!(cmp & 1)) goto loc_{extra:x};', lambda env: jump(env)),
+('jpe', 'if (!(cmp & 1)) goto loc_{extra:x};', lambda env: jump(env)),
+('jpo', 'if (cmp & 1) goto loc_{extra:x};', lambda env: jump(env)),
+('js', 'if ((cmp>0)-(cmp<0) >= 0) goto loc_{extra:x};', lambda env: jump(env)),
+('jnz', 'if (cmp) goto loc_{extra:x};', lambda env: jump(env)),
+('jz', 'if (!cmp) goto loc_{extra:x};', lambda env: jump(env)),
+('jmp', 'goto loc_{extra:x};', lambda env: jump(env)),
 ('lea','{i[1]} = {i[2]}',None),
 #('leave'
 ('mov', '{i[1]} = {i[2]};',None),
@@ -97,8 +131,11 @@ decompile_table = [
 ('sub', '{i[1]} -= {i[2]};',None),
 ]
 
-def bitlen( op ):
-    return 8 * (len( str( op ))- 2)
+def jump(env):
+    return env['loc']+env['length']+int(env['ins'][1],16)
+
+def bitlen(op):
+    return 8 * (len(str(op))-2)
 #is it a workaround? I hope so...
 
 
