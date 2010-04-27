@@ -245,7 +245,10 @@ class Opcode:
     def __init__(self, data, mode=32):
         self.length = 0
         self.mode = mode
-        self.addr_size = mode/8     # 32-bit mode = 4 bytes.  16-bit mode = 2 bytes
+        if mode == 64:
+            self.addr_size = 4
+        else:
+            self.addr_size = mode/8     # 32-bit mode = 4 bytes.  16-bit mode = 2 bytes
         self.data = data
         self.off  = 0
         self.source = ""
@@ -279,7 +282,7 @@ class Opcode:
             ndx = ( (ndx - table[3]) >> table[1]) & table[2]
             ptr = table[0][ndx] # index from table
             
-            if ptr[1] == opcode86.INSTR_PREFIX:
+            if ptr[1] == opcode86.INSTR_PREFIX or (ptr[1] & opcode86.INSTR_PREFIX64 and self.mode == 64):
                 # You can have more than one prefix (!?)
                 if ptr[0] != 0 and len(self.data) > off and self.data[off+1] == '\x0F':
                     self.parse(table86[ptr[0]],  off+2)         # eg. 660Fxx, F20Fxx, F30Fxx, etc...
@@ -437,12 +440,14 @@ class Opcode:
         But it's also bastardized, because it manipulates self.addr_size at the top
         """
         size=self.mode / 8      #initial setting (4 for 32-bit mode)
+        if self.mode == 64:
+            size = 4
         
         flag = opflag & opcode86.OPTYPE_MASK
         
         #print "flag=%x   mode=%d"%(flag,self.mode)
         if (flag in opcode86.OPERSIZE.keys()):                  # lookup the value in the table
-            size = opcode86.OPERSIZE[flag][self.mode >> 5]
+            size = opcode86.OPERSIZE[flag][size >> 2]
             
             
         for a in self.prefix:
@@ -640,20 +645,21 @@ class Opcode:
             type = a.getType()
             if type in [opcode86.PREFIX_LOCK, opcode86.PREFIX_REPNZ, opcode86.PREFIX_REP]:
                 prefix+= a.getName() + " "
-            if (type & opcode86.PREFIX_REX):
-                rex = ''
-                if type & opcode86.PREFIX_REXB:
-                    rex += 'b'
-                if type & opcode86.PREFIX_REXW:
-                    rex += 'w'
-                if type & opcode86.PREFIX_REXX:
-                    rex += 'x'
-                if type & opcode86.PREFIX_REXR:
-                    rex += 'r'
-                if rex:
-                    prefix += 'REX.'+rex+' '
-                else:
-                    prefix += 'REX '
+            if self.mode == 64:
+                if (type & opcode86.PREFIX_REX):
+                    rex = ''
+                    if type & opcode86.PREFIX_REXB:
+                        rex += 'b'
+                    if type & opcode86.PREFIX_REXW:
+                        rex += 'w'
+                    if type & opcode86.PREFIX_REXX:
+                        rex += 'x'
+                    if type & opcode86.PREFIX_REXR:
+                        rex += 'r'
+                    if rex:
+                        prefix += 'REX.'+rex+' '
+                    else:
+                        prefix += 'REX '
         return prefix
 if __name__=="__main__":
     # To get this information, just
