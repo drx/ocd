@@ -9,7 +9,7 @@ def disassemble(buf, virt):
     result = []
     while off != len(buf):
         try:
-            p = Opcode(buf[off:])
+            p = Opcode(buf[off:], mode=64)
             pre = p.getPrefix()
             length = p.getSize()
             result.append({'prefix': pre, 'ins': p.getOpcode(FORMAT), 'loc': virt+off, 'length': length, 'bin': buf[off:off+length]})
