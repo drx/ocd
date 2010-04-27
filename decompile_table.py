@@ -88,13 +88,13 @@ decompile_table = [
 
 ('dec', '{i[1]}--;',None),
 ('jmp', 'goto loc_{extra:x};', lambda env: env['loc']+env['length']+int(env['ins'][1],16)),
-#('lea','
+('lea','{i[1]} = {i[2]}',None),
 #('leave'
 ('mov', '{i[1]} = {i[2]};',None),
 #('pop', '
 #('push', '
-#('ret'
-('sub', '{i[1]} -= {i[2]};',None)
+('ret', 'return eax;', None),
+('sub', '{i[1]} -= {i[2]};',None),
 ]
 
 def bitlen( op ):

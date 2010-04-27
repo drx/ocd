@@ -25,13 +25,14 @@ def decompile(ins):
 
         fmt = '\t'+fmt
 
-    fmt += debug('\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) */')
+    fmt += debug('\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */')
     env = {
         'loc': ins['loc'],
         'length': ins['length'],
         'bin': hexlify(ins['bin']),
         'instr': ' '.join(ins['ins']),
         'ins': ins['ins'],
+        'prefix': ins['prefix'],
     }
     extra = ''
     if extra_lambda:
@@ -68,7 +69,7 @@ def labelize_functions(functions, labels):
         f = []
         for ins in function:
             if ins['loc'] in labels:
-                f.append({'bin': '', 'loc': ins['loc'], 'length': 0, 'ins': ['!label', labels[ins['loc']]]})
+                f.append({'prefix': '', 'bin': '', 'loc': ins['loc'], 'length': 0, 'ins': ['!label', labels[ins['loc']]]})
             f.append(ins)
                 
         functions[name] = f

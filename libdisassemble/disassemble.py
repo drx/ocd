@@ -637,8 +637,23 @@ class Opcode:
     def getPrefix(self):
         prefix=""
         for a in self.prefix:
-            if a.getType() in [opcode86.PREFIX_LOCK, opcode86.PREFIX_REPNZ, opcode86.PREFIX_REP]:
+            type = a.getType()
+            if type in [opcode86.PREFIX_LOCK, opcode86.PREFIX_REPNZ, opcode86.PREFIX_REP]:
                 prefix+= a.getName() + " "
+            if (type & opcode86.PREFIX_REX):
+                rex = ''
+                if type & opcode86.PREFIX_REXB:
+                    rex += 'b'
+                if type & opcode86.PREFIX_REXW:
+                    rex += 'w'
+                if type & opcode86.PREFIX_REXX:
+                    rex += 'x'
+                if type & opcode86.PREFIX_REXR:
+                    rex += 'r'
+                if rex:
+                    prefix += 'REX.'+rex+' '
+                else:
+                    prefix += 'REX '
         return prefix
 if __name__=="__main__":
     # To get this information, just
