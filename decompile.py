@@ -1,6 +1,7 @@
-from debug import debug
+from debug import debug_sprint
 from binascii import hexlify
 from decompile_table import decompile_table
+from control_flow import cfg
 
 def find(f, seq):
     for item in seq:
@@ -25,7 +26,7 @@ def decompile(ins):
 
         fmt = '\t'+fmt
 
-    fmt += debug('\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */')
+    fmt += debug_sprint('\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */', 'misc')
     env = {
         'loc': ins['loc'],
         'length': ins['length'],
@@ -68,17 +69,20 @@ def labelize_functions(functions, labels):
     for name, function in functions.iteritems():
         f = []
         for ins in function:
-            if ins['loc'] in labels:
-                f.append({'prefix': '', 'bin': '', 'loc': ins['loc'], 'length': 0, 'ins': ['!label', labels[ins['loc']]]})
+#            if ins['loc'] in labels:
+#                f.append({'prefix': '', 'bin': '', 'loc': ins['loc'], 'length': 0, 'ins': ['!label', labels[ins['loc']]]})
             f.append(ins)
                 
         functions[name] = f
 
     return functions        
 
-def decompile_function(asm, name):
+def decompile_function(asm, labels, name):
     signature = infer_signature(asm)
     pre, post = output_signature(signature, name)
+
+    asm = cfg(asm, labels, name)
+
     return pre + '\n'.join(map(decompile, asm)) + post
 
 def decompile_functions(functions, symbols):
@@ -87,7 +91,7 @@ def decompile_functions(functions, symbols):
 
     output = ''
     for name, symbol in symbols.iteritems():
-        output += decompile_function(functions[name], name)
+        output += decompile_function(functions[name], labels, name)
         output += '\n'
 
     return output
