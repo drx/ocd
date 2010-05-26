@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from disassemble import disassemble
 from decompile import decompile_functions
-from debug import debug_start
+from debug import debug_set, debug_options
 
 from subprocess import Popen, PIPE
 
@@ -28,13 +28,13 @@ if __name__=="__main__":
 
     usage = "usage: %prog [options] file"
     parser = OptionParser(usage=usage)
-    parser.add_option("-d", "--debug", dest="debug", action="store_true",
-        help="turn debug mode on", default=False)
+    parser.add_option("-d", "--debug", dest="debug", action="append",
+        help="turn debug option on", default=[], choices=debug_options)
 
     options, args = parser.parse_args()
 
-    if options.debug:
-        debug_start()    
+    for option in options.debug:
+        debug_set(option)    
 
     if len(args) < 1:
         parser.print_help()
