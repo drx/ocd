@@ -1,12 +1,27 @@
-_debug = False
+'''
+Debug module
 
-def debug_start():
-    global _debug
-    _debug = True
+Acceptable debug levels: all, graph, misc
+'''
 
-def debug(str):
+debug_options = ['all', 'graph', 'misc']
+
+_debug = []
+
+def debug_check(cond):
     global _debug
-    if _debug:
+    return (cond in _debug or 'all' in _debug)    
+
+def debug_set(cond=None):
+    global _debug
+    if cond is None:
+        _debug.append('all')
+    else:
+        _debug.append(cond)
+
+def debug_sprint(str, cond):
+    if debug_check(cond):
         return str
     else:
         return ''
+
