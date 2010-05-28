@@ -104,8 +104,8 @@ def graph_transform(graph):
 
     The rewriting system used here is decreasing (i.e. all transformations
      decrease the size of the graph), because every transformation rule is
-     guaranteed to be decreasing, therefore it will always stop at
-     some point.
+     guaranteed to be decreasing, therefore it is total (it will always stop
+     at some point.
 
     Transformation rules are functions of the type
 
