@@ -2,6 +2,8 @@ from debug import debug_sprint
 from binascii import hexlify
 from decompile_table import decompile_table
 from control_flow import control_flow_graph
+from itertools import izip, starmap, repeat
+from copy import copy
 
 def find(f, seq):
     for item in seq:
@@ -9,20 +11,35 @@ def find(f, seq):
             return item
     raise LookupError
 
-def decompile(cfg):
-    return '\n\n'.join(map(decompile_vertex, sorted(cfg.vertices().iteritems())))
+class Indent():
+    def __init__(self, level=0):
+        self.level = level
 
-def decompile_vertex((t, v)):
+    def inc(self):
+        new = copy(self)
+        new.level += 1
+        return new
+
+    def out(self):
+        return '\t'*self.level
+
+def decompile(cfg):
+    return '\n'.join(map(decompile_vertex, sorted(cfg.vertices().iteritems(), lambda ((a,b),c), ((d,e),f): cmp(b,e))))
+
+def decompile_vertex((t, v), indent=None):
     block_type, block_start = t
+    if indent is None:
+        indent = Indent(1)
     if block_type == 'block':
-        return '\n'.join(map(decompile_ins, v))
+        return '\n'.join(starmap(decompile_ins, izip(v, repeat(indent))))
     elif block_type == 'ifelse':
         condition, true, false = v
-        return 'if ({0})\n{{\n{1}\n}}\nelse\n{{\n{2}\n}}\n'.format(
-            condition, decompile_vertex(true), decompile_vertex(false))
+        return '{3}if ({0})\n{3}{{\n{1}\n{3}}}\n{3}else\n{3}{{\n{2}\n{3}}}\n'.format(
+            condition, decompile_vertex(true, indent.inc()), decompile_vertex(false, indent.inc()),
+            indent.out())
     return ''
 
-def decompile_ins(ins):
+def decompile_ins(ins, indent):
     opcode = ins['ins'][0]
     extra_lambda = None
 
@@ -37,7 +54,7 @@ def decompile_ins(ins):
         except LookupError:
             fmt = '// {env[instr]}'
 
-        fmt = '\t'+fmt
+        fmt = indent.out()+fmt
 
     fmt += debug_sprint('\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */', 'misc')
     env = {
