@@ -4,74 +4,87 @@ graphfile = None
 
 class Graph:
     def __init__(self):
-        self.pred = defaultdict(list)
-        self.succ = defaultdict(list)
+        self._pred = defaultdict(list)
+        self._succ = defaultdict(list)
+        self._vertices = {}
 
     def __str__(self):
-        return 'Graph(pred=' + str(self.pred) + ', succ=' + str(self.succ) + ')'
+        return 'Graph(vertices=' + str(self._vertices) + ', pred=' + str(self._pred) + ', succ=' + str(self._succ) + ')'
 
     def __contains__(self, (v, t)):
         if t == 'in':
-            return (v in self.pred)
+            return (v in self._pred)
         if t == 'out':
-            return (v in self.succ)
+            return (v in self._succ)
         if t == None:
-            return (v in self.pred or v in self.succ)
+            return (v in self._pred or v in self._succ)
 
-    def __getitem__(self, key):
-        return self.succ[key]
+    def successors(self, key):
+        return self._succ[key]
+
+    def set_vertex(self, k, v=None):
+        self._vertices[k] = v
+
+    def vertices(self):
+        return self._vertices
 
     def add_edge(self, v_in, v_out):
-        self.succ[v_in].append(v_out)
-        self.pred[v_out].append(v_in)
-        
+        self._succ[v_in].append(v_out)
+        self._pred[v_out].append(v_in)
 
-def cfg(function, labels, name):
+    def export(self, f, name):
+        def block_end(block):
+            return block[-1]['loc']
+
+        f.write("\tsubgraph {0} {{\n".format(name))
+        for (block_type, block_loc), block in self.vertices().iteritems():
+            f.write("\t\t{0}_{1:x} [label=\"{0}\\n{1:x}:{2:x}\"];\n".format(block_type, block_loc, block_end(block)))
+            for v_type, v_out in self.successors((block_type, block_loc)):
+                f.write("\t\t{0}_{1:x} -> {2}_{3:x};\n".format(block_type, block_loc, v_type, v_out))
+        f.write("\t}\n")       
+
+def control_flow_graph(function, labels, name):
     '''
     Analyze the control flow graph (cfg) of the function
     '''
 
     graph = Graph()
-    lastloc = None
-    lastok = False
+    block_acc = []
+    block_cur = None
+    block_last = None
+    block_change = True
+    pass_through = False
     for ins in function:
-        ok = True 
-        if ins['ins'][0][0] == 'j': # jumps (and only jumps)
-            loc_cur = ins['loc']
-            loc_j = ins['loc']+ins['length']+int(ins['ins'][1],16)
-            graph.add_edge(loc_cur, loc_j)
-            if ins['ins'][0] != 'jmp':
-                print ins['ins'][0]
-                graph.add_edge(loc_cur, loc_cur+ins['length'])
-            else:
-                ok = False
-        if ins['loc'] in labels and lastok:
+        if ins['loc'] in labels or block_change:
+            if block_last is not None:
+                graph.set_vertex(block_last, block_acc)
+            block_cur = ('block', ins['loc'])
+            block_acc = []
+            graph.set_vertex(block_cur)
+
+        if ins['loc'] in labels and pass_through:
             # pass-through edge
-            graph.add_edge(lastloc, ins['loc'])
-        lastloc = ins['loc']
-        lastok = ok
-    
-    start = None
-    end = None
-    lastloc = None
-    blocks = {}
-    for ins in function:
-        if start is None:
-            start = ins['loc']
-            lastloc = ins['loc']
-        if (ins['loc'], 'in') in graph:
-            blocks[start] = lastloc
-            start = ins['loc']
-        end = ins['loc']
-        lastloc = ins['loc']
-    blocks[start] = end
+            graph.add_edge(block_last, ('block', ins['loc']))
 
+        block_change = False
+        pass_through = True
+
+        if ins['ins'][0][0] == 'j': # jumps (and only jumps)
+            loc_next = ins['loc']+ins['length']
+            loc_j = loc_next+int(ins['ins'][1], 16)
+            graph.add_edge(block_cur, ('block', loc_j))
+            block_change = True
+            if ins['ins'][0] != 'jmp':
+                graph.add_edge(block_cur, ('block', loc_next))
+            else:
+                pass_through = False
+        block_last = block_cur
+        block_acc.append(ins)
+
+    graph.set_vertex(block_last, block_acc)
+  
     if graphfile:
-        graphfile.write("\tsubgraph {0} {{\n".format(name))
-        for block in blocks:
-            graphfile.write("\t\tb_{0:x} [label=\"block\\n{0:x}:{1:x}\"];\n".format(block, blocks[block]))
-            for v_out in graph[blocks[block]]:
-                graphfile.write("\t\tb_{0:x} -> b_{1:x};\n".format(block, v_out))
-        graphfile.write("\t}\n")
+        graph.export(graphfile, name)
 
-    return function
+    return graph
+
