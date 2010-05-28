@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import dropwhile
 
 graphfile = None
 
@@ -86,5 +87,32 @@ def control_flow_graph(function, labels, name):
     if graphfile:
         graph.export(graphfile, name)
 
-    return graph
+    return graph_transform(graph)
 
+def flip(x):
+    '''
+    flip(x)(f) = f(x)
+    '''
+    def f(g):
+        return g(x)
+    return f
+
+def graph_transform(graph):
+    '''
+    Perform one step transformations of the graph according to
+     preset rules until no more transformations can be performed.
+
+    The rewriting system used here is decreasing (i.e. all transformations
+     decrease the size of the graph) therefore it will always stop at
+     some point.
+    '''
+    def trivial(graph):
+        return False, graph
+
+    rules = [trivial]
+
+    i = dropwhile(lambda (x, y): not x, map(flip(graph), rules))
+    try:
+        return graph_transform(i.next())
+    except StopIteration:
+        return graph
