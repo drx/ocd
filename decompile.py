@@ -1,7 +1,7 @@
 from debug import debug_sprint
 from binascii import hexlify
 from decompile_table import decompile_table
-from control_flow import cfg
+from control_flow import control_flow_graph
 
 def find(f, seq):
     for item in seq:
@@ -9,7 +9,16 @@ def find(f, seq):
             return item
     raise LookupError
 
-def decompile(ins):
+def decompile(cfg):
+    return '\n\n'.join(map(decompile_vertex, sorted(cfg.vertices().iteritems())))
+
+def decompile_vertex((t, v)):
+    block_type, block_start = t
+    if block_type == 'block':
+        return '\n'.join(map(decompile_ins, v))
+    return str(v)
+
+def decompile_ins(ins):
     opcode = ins['ins'][0]
     extra_lambda = None
 
@@ -81,9 +90,9 @@ def decompile_function(asm, labels, name):
     signature = infer_signature(asm)
     pre, post = output_signature(signature, name)
 
-    asm = cfg(asm, labels, name)
+    cfg = control_flow_graph(asm, labels, name)
 
-    return pre + '\n'.join(map(decompile, asm)) + post
+    return pre + decompile(cfg) + post
 
 def decompile_functions(functions, symbols):
     labels = get_labels(functions)
