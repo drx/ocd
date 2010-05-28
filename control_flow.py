@@ -167,5 +167,6 @@ def graph_transform(graph):
         true, graph = i.next()
         return graph_transform(graph)
     except StopIteration:
-        graph.export(graphfile, 'a')
+        if graphfile:
+            graph.export(graphfile, 'transformed')
         return graph
