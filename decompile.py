@@ -16,7 +16,11 @@ def decompile_vertex((t, v)):
     block_type, block_start = t
     if block_type == 'block':
         return '\n'.join(map(decompile_ins, v))
-    return str(v)
+    elif block_type == 'ifelse':
+        condition, true, false = v
+        return 'if ({0})\n{{\n{1}\n}}\nelse\n{{\n{2}\n}}\n'.format(
+            condition, decompile_vertex(true), decompile_vertex(false))
+    return ''
 
 def decompile_ins(ins):
     opcode = ins['ins'][0]

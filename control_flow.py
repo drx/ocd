@@ -23,8 +23,22 @@ class Graph:
     def successors(self, key):
         return self._succ[key]
 
+    def predecessors(self, key):
+        return self._pred[key]
+
+    def vertex(self, k):
+        return self._vertices[k]
+
     def set_vertex(self, k, v=None):
         self._vertices[k] = v
+
+    def remove_vertices(self, ks):
+        for k in ks:
+            for p in self._pred[k]:
+                self._succ[p].remove(k)
+            for s in self._succ[k]:
+                self._pred[s].remove(k)
+            del self._vertices[k]
 
     def vertices(self):
         return self._vertices
@@ -34,14 +48,17 @@ class Graph:
         self._pred[v_out].append(v_in)
 
     def export(self, f, name):
-        def block_end(block):
-            return block[-1]['loc']
+        def block_label(block_type, block_loc, block):
+            if block_type == 'block':
+                return "block\\n{0:x}:{1:x}".format(block_loc, block[-1]['loc'])
+            else:
+                return "{0}\\n{1:x}".format(block_type, block_loc)
 
         f.write("\tsubgraph {0} {{\n".format(name))
         for (block_type, block_loc), block in self.vertices().iteritems():
-            f.write("\t\t{0}_{1:x} [label=\"{0}\\n{1:x}:{2:x}\"];\n".format(block_type, block_loc, block_end(block)))
+            f.write("\t\t{0}_{1}_{2:x} [label=\"{3}\"];\n".format(name, block_type, block_loc, block_label(block_type, block_loc, block)))
             for v_type, v_out in self.successors((block_type, block_loc)):
-                f.write("\t\t{0}_{1:x} -> {2}_{3:x};\n".format(block_type, block_loc, v_type, v_out))
+                f.write("\t\t{0}_{1}_{2:x} -> {0}_{3}_{4:x};\n".format(name, block_type, block_loc, v_type, v_out))
         f.write("\t}\n")       
 
 def control_flow_graph(function, labels, name):
@@ -120,10 +137,35 @@ def graph_transform(graph):
     def trivial(graph):
         return False, graph
 
-    rules = [trivial]
+    def ifelse(graph):
+        for v in graph.vertices():
+            succs = graph.successors(v)
+            if len(succs) == 2:
+                s, t = succs
+                s_s, t_s = map(graph.successors, succs)
+                s_p, t_p = map(graph.predecessors, succs)
+                if map(len, [s_s, t_s, s_p, t_p]) == [1]*4 and s_s == t_s:
+                    v_type, start = v
+                    v_new = ('ifelse', start)
+                    condition = None
+                    v_new_value = (condition,
+                        (s, graph.vertex(s)), (t, graph.vertex(t)))
+                    graph.set_vertex(v_new, v_new_value)
+                    graph.add_edge(v_new, s_s[0])
+                    for pred in graph.predecessors(v):
+                        graph.add_edge(pred, v_new)
+                    graph.remove_vertices([v, s, t])
+                    return (True, graph)
+
+        return (False, graph)
+                    
+
+    rules = [trivial, ifelse]
 
     i = dropwhile(lambda (x, y): not x, map(flip(graph), rules))
     try:
-        return graph_transform(i.next())
+        true, graph = i.next()
+        return graph_transform(graph)
     except StopIteration:
+        graph.export(graphfile, 'a')
         return graph
