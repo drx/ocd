@@ -103,8 +103,19 @@ def graph_transform(graph):
      preset rules until no more transformations can be performed.
 
     The rewriting system used here is decreasing (i.e. all transformations
-     decrease the size of the graph) therefore it will always stop at
+     decrease the size of the graph), because every transformation rule is
+     guaranteed to be decreasing, therefore it will always stop at
      some point.
+
+    Transformation rules are functions of the type
+
+      Graph -> (Boolean, Graph)
+
+    The boolean value signifies whether the transformation condition was
+     satisfied and the transformation was applied successfully.
+
+    If no further transformation can be performed, the process is stopped
+     and the resulting graph is returned.
     '''
     def trivial(graph):
         return False, graph
