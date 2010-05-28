@@ -1,0 +1,9 @@
+# Ignore compiled python sources
+*.pyc
+
+# Ignore swap files
+*.swp
+
+# Ignore test executables, but not the sources
+tests/test_*
+!tests/test_*.c
