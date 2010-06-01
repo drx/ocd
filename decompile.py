@@ -135,35 +135,21 @@ def variable_inference(asm, labels):
     var_names = new_var_name()
     vars = {}
 
-    def writable(opcode, i):
-        if re.match("^-?0x.*", opcode['ins'][i]):
-            return False
-        else:
-            return True
-
-
-    def readable(opcode, i):
-        return False
-
     for line, opcode in enumerate(asm):
-        for i, arg in enumerate(opcode['ins'][1:], 1):
-            if writable(opcode, i):
+        for i, arg_mod in enumerate(izip(opcode['ins'][1:], opcode['r'], opcode['w']), 1):
+            arg, readable, writable = arg_mod
+            if writable:
                 if arg in vars:
-                    #print "reappearance of " + vars[arg]
                     asm[line]['ins'][i] = vars[arg]
-                    pass
                 else:
                     var_name = var_names.next()
                     vars[arg] = var_name + "(" + arg + ")"
-                    #print var_name  + '=' + arg
                     asm[line]['ins'][i] = vars[arg] 
-            if readable(opcode, i):
+            if readable:
                 if arg in vars:
-                    #print "reappearance of " + vars[arg]
                     asm[line]['ins'][i] = vars[arg] 
-                    pass
                 else:
-                    #print "Error: reading nonexistant variable"
+                    print "Error: reading nonexistant variable "
                     pass
     return asm
 
