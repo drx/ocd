@@ -38,6 +38,8 @@ class Graph:
                 self._succ[p].remove(k)
             for s in self._succ[k]:
                 self._pred[s].remove(k)
+            del self._pred[k]
+            del self._succ[k]
             del self._vertices[k]
 
     def vertices(self):
@@ -179,7 +181,7 @@ def graph_transform(graph):
             if graph.deg_out(v) == 2:
                 succs = graph.successors(v)
                 for s1, s2 in permutations(succs):
-                    if graph.deg_out(s1) == 1 and graph.deg_in(s2) == 2:
+                    if graph.deg_out(s1) == 1:
                         s1_succ = graph.successors(s1)[0]
                         if s1_succ == s2:
                             s1_type, s1_start = s1
@@ -218,6 +220,8 @@ def graph_transform(graph):
         return (False, graph)
 
     def t_cons(graph):
+        import random
+        graph.export(graphfile, 'asdf_'+''.join(random.sample('0123456789', 10)))
         for v in graph.vertices():
             if graph.deg_out(v) == 1:
                 s = graph.successors(v)[0]
@@ -239,6 +243,7 @@ def graph_transform(graph):
                         for succ in graph.successors(s):
                             graph.add_edge(v_new, succ)
                         graph.remove_vertices([v,s])
+                    graph.export(graphfile, 'asdf2_'+''.join(random.sample('0123456789', 10)))
                     return (True, graph)
 
         return (False, graph) 
