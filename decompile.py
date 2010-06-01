@@ -46,7 +46,7 @@ def decompile_vertex((t, v), indent=None):
 
     elif block_type == 'while':
         condition, pre, loop = v
-        return '{indent}while ({cond})\n{indent}{{\n{pre}\n{loop}\n{indent}}}\n'.format(
+        return '{indent}while ({cond})\n{indent}{{\n{loop}\n{pre}\n{indent}}}\n'.format(
             indent=indent.out(), cond=condition,
             pre=decompile_vertex(pre, indent.inc()), loop=decompile_vertex(loop, indent.inc())
         )

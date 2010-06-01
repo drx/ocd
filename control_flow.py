@@ -249,7 +249,7 @@ def graph_transform(graph):
     try:
         true, graph = i.next()
         import random
-        graph.export(graphfile, 'test_'+''.join(random.sample('0123456789', 10)))
+        graph.export(graphfile, 'step_'+''.join(random.sample('0123456789', 10)))
         return graph_transform(graph)
     except StopIteration:
         if graphfile:
