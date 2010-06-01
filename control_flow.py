@@ -150,7 +150,7 @@ def graph_transform(graph):
     def trivial(graph):
         return False, graph
 
-    """    def if_single(graph):
+    def if_single(graph):
         for v in graph.vertices():
             if graph.deg_out(v) == 2:
                 succs = graph.successors(v)
@@ -160,11 +160,16 @@ def graph_transform(graph):
                         if s1_succ == s2:
                             v_type, v_start = v
                             v_new = ('if', v_start)
-                            condition = None
-                            v_new_value = (condition, (
-    """ 
+                            condition = 'cmp'
+                            v_new_value = (condition, (s1, graph.vertex(s1)))
+                            graph.set_vertex(v_new, v_new_value)
+                            graph.add_edge(v, v_new)
+                            graph.add_edge(v_new, s2)
+                            graph.remove_vertices([s1])
+                            return (True, graph)
+     
 
-#        return (False, graph)
+        return (False, graph)
 
     def ifelse(graph):
         for v in graph.vertices():
@@ -213,7 +218,7 @@ def graph_transform(graph):
 
         return (False, graph) 
 
-    rules = [trivial, ifelse, cons]
+    rules = [trivial, ifelse, cons, if_single]
 
     i = dropwhile(lambda (x, y): not x, map(flip(graph), rules))
     try:
