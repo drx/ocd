@@ -33,11 +33,31 @@ def decompile_vertex((t, v), indent=None):
         indent = Indent(1)
     if block_type == 'block':
         return '\n'.join(starmap(decompile_ins, izip(v, repeat(indent))))
+
+    elif block_type == 'if':
+        condition, block = v
+        return '{indent}if ({cond})\n{indent}{{\n{block}\n{indent}}}\n'.format(
+            cond=condition, block=decompile_vertex(block, indent.inc()), indent=indent.out())
+
     elif block_type == 'ifelse':
         condition, true, false = v
-        return '{3}if ({0})\n{3}{{\n{1}\n{3}}}\n{3}else\n{3}{{\n{2}\n{3}}}\n'.format(
-            condition, decompile_vertex(true, indent.inc()), decompile_vertex(false, indent.inc()),
-            indent.out())
+        return '{indent}if ({cond})\n{indent}{{\n{true}\n{indent}}}\n{indent}else\n{indent}{{\n{false}\n{indent}}}\n'.format(
+            cond=condition, true=decompile_vertex(true, indent.inc()), false=decompile_vertex(false, indent.inc()),
+            indent=indent.out())
+
+    elif block_type == 'while':
+        condition, pre, loop = v
+        return '{indent}while ({cond})\n{indent}{{\n{loop}\n{pre}\n{indent}}}\n'.format(
+            indent=indent.out(), cond=condition,
+            pre=decompile_vertex(pre, indent.inc()), loop=decompile_vertex(loop, indent.inc())
+        )
+
+    elif block_type == 'cons':
+        out = ''
+        for b in v:
+            out += decompile_vertex(b, indent)
+        return out
+
     return ''
 
 def decompile_ins(ins, indent):
@@ -48,6 +68,9 @@ def decompile_ins(ins, indent):
     if opcode[0] == '!':
         if opcode == '!label':
             fmt = '{i[1]}:'
+
+    elif opcode[0] == 'j':
+        return ''
         
     else:
         try:

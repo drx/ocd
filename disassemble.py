@@ -8,13 +8,14 @@ def disassemble(buf, virt):
 
     result = []
     while off != len(buf):
-        try:
+#        try:
             p = Opcode(buf[off:], mode=64)
             pre = p.getPrefix()
             length = p.getSize()
-            result.append({'prefix': pre, 'ins': p.getOpcode(FORMAT), 'loc': virt+off, 'length': length, 'bin': buf[off:off+length]})
+            ins, r, w = p.getOpcode(FORMAT)
+            result.append({'prefix': pre, 'ins': ins, 'loc': virt+off, 'length': length, 'bin': buf[off:off+length], 'r': r, 'w': w})
             off += length
-        except:
-            break
-    
+# catch-all except... this was bad.
+#        except:
+#            break
     return result
