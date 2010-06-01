@@ -2,8 +2,9 @@ from debug import debug_sprint
 from binascii import hexlify
 from decompile_table import decompile_table
 from control_flow import control_flow_graph
-from itertools import izip, starmap, repeat
+from itertools import izip, starmap, repeat, count
 from copy import copy
+import re
 
 def find(f, seq):
     for item in seq:
@@ -107,17 +108,52 @@ def labelize_functions(functions, labels):
 
     return functions        
 
+def variable_inference(asm, labels):
+    var_names = new_var_name()
+    vars = {}
+
+    def writable(opcode, i):
+        if re.match("^-?0x.*", opcode['ins'][i]):
+            return False
+        else:
+            return True
+
+
+    def readable(opcode, i):
+        return False
+
+    for opcode in asm:
+        for i, arg in enumerate(opcode['ins'][1:], 1):
+            if writable(opcode, i):
+                if arg in vars:
+                    print "reappearance of " + vars[arg]
+                else:
+                    var_name = var_names.next()
+                    vars[arg] = var_name
+                    print var_name  + '=' + arg
+            if readable(opcode, i):
+                if arg in vars:
+                    print "reappearance of " + vars[arg]
+                else:
+                    print "Error: reading nonexistant variable"
+    return asm
+
+def new_var_name():
+    for n in count(0):
+        yield "var_{0}".format(n)
+
 def decompile_function(asm, labels, name):
     signature = infer_signature(asm)
     pre, post = output_signature(signature, name)
-
+    
+    asm = variable_inference(asm, labels)
     cfg = control_flow_graph(asm, labels, name)
 
     return pre + decompile(cfg) + post
 
 def decompile_functions(functions, symbols):
     labels = get_labels(functions)
-    functions = labelize_functions(functions, labels)
+    rfunctions = labelize_functions(functions, labels)
 
     output = ''
     for name, symbol in symbols.iteritems():
