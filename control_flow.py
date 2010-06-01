@@ -59,12 +59,16 @@ class Graph:
         self._succ[v_in].remove(v_out)
         self._pred[v_out].remove(v_in)
 
-    def export(self, f, name):
+    def export(self, f, name, random=False):
         def block_label(block_type, block_loc, block):
             if block_type == 'block':
                 return "block\\n{0:x}:{1:x}".format(block_loc, block[-1]['loc'])
             else:
                 return "{0}\\n{1:x}".format(block_type, block_loc)
+
+        if random:
+            import random
+            name += '_'+''.join(random.sample('0123456789abcdef', 8))
 
         f.write("\tsubgraph {0} {{\n".format(name))
 
@@ -220,8 +224,6 @@ def graph_transform(graph):
         return (False, graph)
 
     def t_cons(graph):
-        import random
-        graph.export(graphfile, 'asdf_'+''.join(random.sample('0123456789', 10)))
         for v in graph.vertices():
             if graph.deg_out(v) == 1:
                 s = graph.successors(v)[0]
@@ -243,7 +245,6 @@ def graph_transform(graph):
                         for succ in graph.successors(s):
                             graph.add_edge(v_new, succ)
                         graph.remove_vertices([v,s])
-                    graph.export(graphfile, 'asdf2_'+''.join(random.sample('0123456789', 10)))
                     return (True, graph)
 
         return (False, graph) 
@@ -253,8 +254,7 @@ def graph_transform(graph):
     i = dropwhile(lambda (x, y): not x, map(flip(graph), rules))
     try:
         true, graph = i.next()
-        import random
-        graph.export(graphfile, 'step_'+''.join(random.sample('0123456789', 10)))
+        graph.export(graphfile, 'step', random=True)
         return graph_transform(graph)
     except StopIteration:
         if graphfile:
