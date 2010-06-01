@@ -254,7 +254,8 @@ def graph_transform(graph):
     i = dropwhile(lambda (x, y): not x, map(flip(graph), rules))
     try:
         true, graph = i.next()
-        graph.export(graphfile, 'step', random=True)
+        if graphfile:
+            graph.export(graphfile, 'step', random=True)
         return graph_transform(graph)
     except StopIteration:
         if graphfile:
