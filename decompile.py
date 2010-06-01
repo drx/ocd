@@ -149,11 +149,11 @@ def variable_inference(asm, labels):
                 if arg in vars:
                     asm[line]['ins'][i] = vars[arg] 
                 else:
-                    #print "Error: reading nonexistant variable " + arg
-                    #var_name = var_names.next()
-                    #vars[arg] = var_name + "(" + arg + ")"
-                    #asm[line]['ins'][i] = vars[arg] 
-                    pass
+                    if not re.match("-?0x.*", arg ):
+                        print "Error: reading nonexistant variable " + arg
+                        var_name = var_names.next()
+                        vars[arg] = var_name + "(" + arg + ")"
+                        asm[line]['ins'][i] = vars[arg] 
     return asm
 
 def new_var_name():
