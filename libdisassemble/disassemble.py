@@ -310,6 +310,8 @@ class Opcode:
             bytes=0
             #       src dst aux
             values=['', '', '' ]		
+            r = [False]*3
+            w = [False]*3
             #print self.off
             
             for a in range(2, 5):
@@ -419,11 +421,15 @@ class Opcode:
                     if isinstance(ret[1], Expression):
                         ret[1].setPsize(operand_size)				
                 values[a-2]=ret[1]
+                r[a-2] = (tmp & opcode86.OP_R) != 0
+                w[a-2] = (tmp & opcode86.OP_W) != 0
                 bytes += ret[0]
                 
             self.source = values[0]
             self.dest   = values[1]
             self.aux    = values[2]
+            self.r = r
+            self.w = w
     
             self.off += bytes
             #self.data = self.data[:self.off]
@@ -641,7 +647,7 @@ class Opcode:
                 #post += "%s" % self.source.printOpcode(FORMAT, eip)				
             opcode = [mnemonic] + post
             
-        return opcode
+        return (opcode, self.r, self.w)
     
     def printOpcode(self, FORMAT, eip = 0, space=6):
         opcode=self.getOpcode(FORMAT, eip + self.getSize())
