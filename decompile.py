@@ -34,9 +34,14 @@ def decompile_vertex((t, v), indent=None):
         return '\n'.join(starmap(decompile_ins, izip(v, repeat(indent))))
     elif block_type == 'ifelse':
         condition, true, false = v
-        return '{3}if ({0})\n{3}{{\n{1}\n{3}}}\n{3}else\n{3}{{\n{2}\n{3}}}\n'.format(
+        return '{3}\n{4}if ({0})\n{4}{{\n{1}\n{4}}}\n{4}else\n{4}{{\n{2}\n{4}}}\n'.format(
             condition, decompile_vertex(true, indent.inc()), decompile_vertex(false, indent.inc()),
-            indent.out())
+            '', indent.out())
+    elif block_type == 'cons':
+        out = ''
+        for b in v:
+            out += decompile_vertex(b, indent)
+        return out
     return ''
 
 def decompile_ins(ins, indent):
@@ -47,6 +52,9 @@ def decompile_ins(ins, indent):
     if opcode[0] == '!':
         if opcode == '!label':
             fmt = '{i[1]}:'
+
+    elif opcode[0] == 'j':
+        return ''
         
     else:
         try:
