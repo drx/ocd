@@ -131,8 +131,17 @@ def labelize_functions(functions, labels):
 
     return functions        
 
+def is_register(x):
+    return x in ("eax", "ebx", "ecx", "edx",
+                 "ebp", "esp",
+                 "esi", "edi", 
+                 "rax", "rcx", "rdx",
+                 "rbp", "rsp") #put all registers here 
+
+
 def variable_inference(asm, labels):
     var_names = new_var_name()
+    temp_names = new_temp_name()
     vars = {}
 
     for line, opcode in enumerate(asm):
@@ -142,8 +151,13 @@ def variable_inference(asm, labels):
                 if arg in vars:
                     asm[line]['ins'][i] = vars[arg]
                 else:
-                    var_name = var_names.next()
-                    vars[arg] = var_name + "(" + arg + ")"
+                    if is_register(arg):
+                        temp_name = temp_names.next()
+                        vars[arg] = temp_name + "(" + arg + ")"
+                    else:
+                        var_name = var_names.next()
+                        vars[arg] = var_name + "(" + arg + ")"
+
                     asm[line]['ins'][i] = vars[arg] 
             if readable:
                 if arg in vars:
@@ -151,14 +165,22 @@ def variable_inference(asm, labels):
                 else:
                     if not re.match("-?0x.*", arg ):
                         print "Error: reading nonexistant variable " + arg
-                        var_name = var_names.next()
-                        vars[arg] = var_name + "(" + arg + ")"
+                        if is_register(arg):
+                            temp_name = temp_names.next()
+                            vars[arg] = temp_name + "(" + arg + ")"
+                        else:
+                            var_name = var_names.next()
+                            vars[arg] = var_name + "(" + arg + ")"
                         asm[line]['ins'][i] = vars[arg] 
     return asm
 
 def new_var_name():
     for n in count(0):
         yield "var_{0}".format(n)
+
+def new_temp_name():
+    for n in count(0):
+        yield "temp_{0}".format(n)
 
 def decompile_function(asm, labels, name):
     signature = infer_signature(asm)
