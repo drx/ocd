@@ -180,12 +180,20 @@ def variable_inference(asm):
 
 def computation_collapse(asm):
     mem = {}
+
+    def lookup_vars(ins, mem):
+        return ins
+
     for line, ins in enumerate(asm[:]):
         if 'dest' not in ins['ins']:
             continue
         else:
             if ins['ins']['dest']['type'] == 'temp' and ins['ins']['dest']['w']:
-                mem[ins['ins']['dest']['repr']] = ins['ins'] #we have to do memory lookup on this value
+                mem[ins['ins']['dest']['repr']] = lookup_vars(ins['ins'])
+                #remove the asm line
+            else:
+                #update current asm line
+                pass
     
     print mem
     return asm
