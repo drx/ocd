@@ -15,4 +15,7 @@ def disassemble_x64(buf, virt):
     return result
 
 def disassemble(buf, virt, arch='x64'):
-    return disassemble_x64(buf, virt)
+    archs = {
+        'x64': disassemble_x64
+    }
+    return archs[arch](buf, virt)
