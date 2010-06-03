@@ -185,13 +185,20 @@ def variable_inference(asm):
 
 def computation_collapse(asm):
     mem = {}
+
+    def lookup_vars(ins, mem):
+        return ins
+
     for line, ins in enumerate(asm[:]):
-        try:
-            print ins['ins']
-            if ins['ins']['dest']['type'] == 'temp' and ins['ins']['dest']['w']:
-                mem[ins['ins']['dest']['repr']] = ins['ins'] #we have to do memory lookup on this value
-        except KeyError:
-            print ins['ins']
+        if 'dest' not in ins['ins']:
+            continue
+        else:
+            if ins['ins']['dest']['w'] and ins['ins']['dest']['type'] == 'temp': 
+                mem[ins['ins']['dest']['repr']] = lookup_vars(ins['ins'], mem)
+                #remove the asm line
+            else:
+                #update current asm line
+                pass
     
     print mem
     return asm
