@@ -154,8 +154,7 @@ def variable_inference(asm, labels):
     temp_names = new_temp_name()
     vars = {}
 
-    #TODO: copy asm
-    for line, ins in enumerate(asm):
+    for line, ins in enumerate(asm[:]):
         for k, arg in ins['ins'].iteritems():
             if k not in ('src', 'dest'):
                 continue
