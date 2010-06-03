@@ -1,6 +1,6 @@
 from control_flow import control_flow_graph
 from copy import copy
-from decompile_table import decompile_table
+from decompile_table import conditions, condition_negs, decompile_table
 from itertools import izip, starmap, repeat, count
 import debug
 import libdisassemble.opcode86 as opcode86
@@ -24,6 +24,11 @@ class Indent():
     def out(self):
         return '\t'*self.level
 
+def condition(cond, var='cmp'):
+    if cond[0] == '!':
+        cond = condition_negs[cond[1:]]
+    return conditions[cond].format(cond=var)
+
 def decompile(cfg):
     return '\n'.join(map(decompile_vertex, sorted(cfg.vertices().iteritems(), lambda ((a,b),c), ((d,e),f): cmp(b,e))))
 
@@ -35,20 +40,20 @@ def decompile_vertex((t, v), indent=None):
         return '\n'.join(starmap(decompile_ins, izip(v, repeat(indent))))
 
     elif block_type == 'if':
-        condition, block = v
+        cond, block = v
         return '{indent}if ({cond})\n{indent}{{\n{block}\n{indent}}}\n'.format(
-            cond=condition, block=decompile_vertex(block, indent.inc()), indent=indent.out())
+            cond=condition(cond), block=decompile_vertex(block, indent.inc()), indent=indent.out())
 
     elif block_type == 'ifelse':
-        condition, true, false = v
+        cond, true, false = v
         return '{indent}if ({cond})\n{indent}{{\n{true}\n{indent}}}\n{indent}else\n{indent}{{\n{false}\n{indent}}}\n'.format(
-            cond=condition, true=decompile_vertex(true, indent.inc()), false=decompile_vertex(false, indent.inc()),
+            cond=condition(cond), true=decompile_vertex(true, indent.inc()), false=decompile_vertex(false, indent.inc()),
             indent=indent.out())
 
     elif block_type == 'while':
-        condition, pre, loop = v
+        cond, pre, loop = v
         return '{indent}while ({cond})\n{indent}{{\n{loop}\n{pre}\n{indent}}}\n'.format(
-            indent=indent.out(), cond=condition,
+            indent=indent.out(), cond=condition(cond),
             pre=decompile_vertex(pre, indent.inc()), loop=decompile_vertex(loop, indent.inc())
         )
 

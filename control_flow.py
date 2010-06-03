@@ -57,6 +57,16 @@ class Graph:
         self._pred[v_out].append(v_in)
         self._edge_values[(v_in, v_out)] = value
 
+    def move_predecessors(self, v, v_new):
+        for pred in self.predecessors(v):
+            self.add_edge(pred, v_new, self.edge(pred, v))
+            self.remove_edge(pred, v)
+
+    def move_successors(self, v, v_new):
+        for succ in self.successors(v):
+            self.add_edge(v_new, succ, self.edge(v, succ))
+            self.remove_edge(v, succ)
+
     def edge(self, v_in, v_out):
         return self._edge_values[(v_in, v_out)]
 
@@ -178,7 +188,7 @@ def graph_transform(graph):
                     if graph.deg_out(s1) == 1 and graph.deg_in(s1) == 1 and v in graph.successors(s1):
                         v_type, v_start = v
                         v_new = ('while', v_start)
-                        condition = 'cmp'
+                        condition = graph.edge(v, s1)
                         v_new_value = (condition, (v, graph.vertex(v)), (s1, graph.vertex(s1)))
                         graph.set_vertex(v_new, v_new_value)
                         for pred in graph.predecessors(v):
@@ -200,7 +210,7 @@ def graph_transform(graph):
                         if s1_succ == s2:
                             s1_type, s1_start = s1
                             v_new = ('if', s1_start)
-                            condition = 'cmp'
+                            condition = '!'+graph.edge(v, s2)
                             v_new_value = (condition, (s1, graph.vertex(s1)))
                             graph.set_vertex(v_new, v_new_value)
                             graph.add_edge(v, v_new)
@@ -215,21 +225,23 @@ def graph_transform(graph):
         for v in graph.vertices():
             succs = graph.successors(v)
             if len(succs) == 2:
-                s, t = succs
-                s_s, t_s = map(graph.successors, succs)
-                s_p, t_p = map(graph.predecessors, succs)
-                if map(len, [s_s, t_s, s_p, t_p]) == [1]*4 and s_s == t_s:
-                    s_type, s_start = s
-                    v_new = ('ifelse', s_start)
-                    condition = 'cmp' # change that
-                    # modify v
-                    v_new_value = (condition,
-                        (s, graph.vertex(s)), (t, graph.vertex(t)))
-                    graph.set_vertex(v_new, v_new_value)
-                    graph.add_edge(v_new, s_s[0])
-                    graph.add_edge(v, v_new)
-                    graph.remove_vertices([s, t])
-                    return (True, graph)
+                for s, t in permutations(succs):
+                    if graph.edge(v, s) is None:
+                        continue
+                    s_s, t_s = map(graph.successors, succs)
+                    s_p, t_p = map(graph.predecessors, succs)
+                    if map(len, [s_s, t_s, s_p, t_p]) == [1]*4 and s_s == t_s:
+                        s_type, s_start = s
+                        v_new = ('ifelse', s_start)
+                        condition = graph.edge(v,s) # change that
+                        # modify v
+                        v_new_value = (condition,
+                            (s, graph.vertex(s)), (t, graph.vertex(t)))
+                        graph.set_vertex(v_new, v_new_value)
+                        graph.add_edge(v_new, s_s[0])
+                        graph.add_edge(v, v_new)
+                        graph.remove_vertices([s, t])
+                        return (True, graph)
 
         return (False, graph)
 
@@ -250,10 +262,8 @@ def graph_transform(graph):
                         v_new = ('cons', v_start)
                         v_new_value = [(v, graph.vertex(v)), (s, graph.vertex(s))]
                         graph.set_vertex(v_new, v_new_value)
-                        for pred in graph.predecessors(v):
-                            graph.add_edge(pred, v_new)
-                        for succ in graph.successors(s):
-                            graph.add_edge(v_new, succ)
+                        graph.move_predecessors(v, v_new)
+                        graph.move_successors(s, v_new)
                         graph.remove_vertices([v,s])
                     return (True, graph)
 
