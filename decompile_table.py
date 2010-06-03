@@ -123,11 +123,11 @@ decompile_table = [
 ('jz', 'if (!cmp) goto loc_{extra:x};', lambda env: jump(env)),
 ('jmp', 'goto loc_{extra:x};', lambda env: jump(env)),
 ('lea','{i[dest]} = {i[src]}', None),
-#('leave'
+('leave', '', None),
 ('mov', '{i[dest]} = {i[src]};', None),
 #('pop', '
 #('push', '
-('ret', 'return eax;', None),
+('return', 'return {i[dest]};', None),
 ('sub', '{i[dest]} -= {i[src]};', None),
 ]
 
