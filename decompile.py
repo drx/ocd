@@ -188,8 +188,8 @@ def computation_collapse(asm):
         if 'dest' not in ins['ins']:
             continue
         else:
-            if ins['ins']['dest']['type'] == 'temp' and ins['ins']['dest']['w']:
-                mem[ins['ins']['dest']['repr']] = lookup_vars(ins['ins'])
+            if ins['ins']['dest']['w'] and ins['ins']['dest']['type'] == 'temp': 
+                mem[ins['ins']['dest']['repr']] = lookup_vars(ins['ins'], mem)
                 #remove the asm line
             else:
                 #update current asm line
