@@ -87,7 +87,11 @@ class Graph:
         for (block_type, block_loc), block in self.vertices().iteritems():
             f.write("\t\t{0}_{1}_{2:x} [label=\"{3}\"];\n".format(name, block_type, block_loc, block_label(block_type, block_loc, block)))
             for v_type, v_out in self.successors((block_type, block_loc)):
-                f.write("\t\t{0}_{1}_{2:x} -> {0}_{3}_{4:x};\n".format(name, block_type, block_loc, v_type, v_out))
+                label = ''
+                value = self.edge((block_type, block_loc), (v_type, v_out))
+                if value is not None:
+                    label = '[label="{0}"]'.format(value)
+                f.write("\t\t{0}_{1}_{2:x} -> {0}_{3}_{4:x} {label};\n".format(name, block_type, block_loc, v_type, v_out, label=label))
         f.write("\t}\n")       
 
 def control_flow_graph(function, labels, name):
@@ -119,7 +123,7 @@ def control_flow_graph(function, labels, name):
         if ins['ins']['op'] == 'jump': # jumps (and only jumps)
             loc_next = ins['loc']+ins['length']
             loc_j = loc_next+ins['ins']['dest']['repr']
-            graph.add_edge(block_cur, ('block', loc_j))
+            graph.add_edge(block_cur, ('block', loc_j), ins['ins']['cond'])
             block_change = True
             if ins['ins']['cond'] != 'true':
                 graph.add_edge(block_cur, ('block', loc_next))
