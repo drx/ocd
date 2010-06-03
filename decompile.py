@@ -69,7 +69,7 @@ def decompile_ins(ins, indent):
     extra_lambda = None
 
     def backward_ins(x):
-        print x
+        #print x
         for i, arg in enumerate(x[1:], 1):
             try:
                 x[i] = arg['name']
