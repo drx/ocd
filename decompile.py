@@ -149,7 +149,7 @@ def is_register(x):
     registers = map(lambda (x,y,z): x, opcode86.regs)
     return x in registers
 
-def variable_inference(asm, labels):
+def variable_inference(asm):
     var_names = new_var_name()
     temp_names = new_temp_name()
     vars = {}
@@ -178,6 +178,18 @@ def variable_inference(asm, labels):
 
     return asm
 
+def computation_collapse(asm):
+    mem = {}
+    for line, ins in enumerate(asm[:]):
+        try:
+            if ins['ins']['dest']['type'] == 'temp' and ins['ins']['dest']['w']:
+                mem[ins['ins']['dest']['repr']] = ins['ins'] #we have to do memory lookup on this value
+        except KeyError:
+            print ins['ins']
+    
+    print mem
+    return asm
+
 def new_var_name():
     for n in count(0):
         yield "var_{0}".format(n)
@@ -190,7 +202,7 @@ def decompile_function(asm, labels, name):
     signature = infer_signature(asm)
     pre, post = output_signature(signature, name)
     
-    asm = variable_inference(asm, labels)
+    asm = computation_collapse(variable_inference(asm))
     cfg = control_flow_graph(asm, labels, name)
 
     return pre + decompile(cfg) + post
