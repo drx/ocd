@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 from disassemble import disassemble
 from decompile import decompile_functions
-from debug import debug_set, debug_options
 import control_flow
+import debug
 
 from subprocess import Popen, PIPE
 
@@ -30,7 +30,7 @@ if __name__=="__main__":
     usage = "usage: %prog [options] file"
     parser = OptionParser(usage=usage)
     parser.add_option("-d", "--debug", dest="debug", action="append",
-        help="turn debug option on", default=[], choices=debug_options,
+        help="turn debug option on", default=[], choices=debug.options,
         metavar="OPTION")
     parser.add_option("-g", "--graph", action="store", dest="graphfile",
         metavar="FILE", type="string", help="output a control flow graph")
@@ -38,7 +38,7 @@ if __name__=="__main__":
     options, args = parser.parse_args()
 
     for option in options.debug:
-        debug_set(option)    
+        debug.set(option)    
 
     if len(args) < 1:
         parser.print_help()

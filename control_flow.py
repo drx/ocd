@@ -110,12 +110,12 @@ def control_flow_graph(function, labels, name):
         block_change = False
         pass_through = True
 
-        if ins['ins'][0][0] == 'j': # jumps (and only jumps)
+        if ins['ins']['op'] == 'jump': # jumps (and only jumps)
             loc_next = ins['loc']+ins['length']
-            loc_j = loc_next+int(ins['ins'][1], 16)
+            loc_j = loc_next+ins['ins']['dest']['repr']
             graph.add_edge(block_cur, ('block', loc_j))
             block_change = True
-            if ins['ins'][0] != 'jmp':
+            if ins['ins']['cond'] != 'true':
                 graph.add_edge(block_cur, ('block', loc_next))
             else:
                 pass_through = False

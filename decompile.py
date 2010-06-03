@@ -1,9 +1,8 @@
-from binascii import hexlify
 from control_flow import control_flow_graph
 from copy import copy
 from decompile_table import decompile_table
-from debug import debug_sprint
 from itertools import izip, starmap, repeat, count
+import debug
 import libdisassemble.opcode86 as opcode86
 import re
 
@@ -65,21 +64,17 @@ def is_constant(x):
     return re.match("-?0x.*", x)
 
 def decompile_ins(ins, indent):
-    opcode = ins['ins'][0]
+    opcode = ins['ins']['op']
     extra_lambda = None
 
-    def backward_ins(x):
-        #print x
-        for i, arg in enumerate(x[1:], 1):
-            try:
-                x[i] = arg['name']
-            except KeyError:
-                x[i] = arg['origin']
-            except TypeError:
-                x[i] = arg
-        return x
-
-    ins['ins'] = backward_ins(ins['ins'])
+    # would be nice to find a nicer way to do this
+    for k, arg in ins['ins'].iteritems():
+        if k not in ('src', 'dest'):
+            continue
+        try:
+            ins['ins'][k] = ins['ins'][k]['repr']
+        except KeyError:
+            pass
 
     # special instructions
     if opcode[0] == '!':
@@ -93,19 +88,21 @@ def decompile_ins(ins, indent):
         try:
             i, fmt, extra_lambda = find(lambda t: t[0] == opcode, decompile_table)
         except LookupError:
-            fmt = '// {env[instr]}'
+            fmt = '// {env[ins]}'
 
         fmt = indent.out()+fmt
 
-    fmt += debug_sprint('\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */', 'misc')
     env = {
         'loc': ins['loc'],
         'length': ins['length'],
-        'bin': hexlify(ins['bin']),
-        'instr': " ".join(ins['ins']),
         'ins': ins['ins'],
-        'prefix': ins['prefix'],
     }
+    if debug.check('misc'):
+        from binascii import hexlify
+        fmt += '\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */'
+        env['bin'] = hexlify(ins['debug']['binary'])
+        env['prefix'] = ins['debug']['prefix']
+
     extra = ''
     if extra_lambda:
         extra = extra_lambda(env)
@@ -116,8 +113,8 @@ def get_labels(functions):
     labels = {}
     for function in functions:
         for ins in functions[function]:
-            if ins['ins'][0][0] == 'j': # all jumps and only them
-                addr = ins['loc']+ins['length']+int(ins['ins'][1],16)
+            if ins['ins']['op'] == 'jump':
+                addr = ins['loc']+ins['length']+ins['ins']['dest']['repr']
                 labels[addr] = 'loc_{0:x}'.format(addr)
 
     return labels
@@ -157,29 +154,28 @@ def variable_inference(asm, labels):
     temp_names = new_temp_name()
     vars = {}
 
-    for line, opcode in enumerate(asm):
-        for i, arg_mod in enumerate(izip(opcode['ins'][1:], opcode['r'], opcode['w']), 1):
-            arg, readable, writable = arg_mod
-            if arg in vars:
-                asm[line]['ins'][i] = vars[arg]
-            else:
-                if writable:
-                    if is_register(arg):
-                        vars[arg] = {'type':'temp', 'name':temp_names.next(), 'origin':arg}
-                    else:
-                        vars[arg] = {'type':'var', 'name':var_names.next(), 'origin':arg}
-                    asm[line]['ins'][i] = vars[arg] 
+    #TODO: copy asm
+    for line, ins in enumerate(asm):
+        for k, arg in ins['ins'].iteritems():
+            if k not in ('src', 'dest'):
+                continue
 
-                if readable:
-                    if is_constant(arg):
-                        asm[line]['ins'][i] = {'type':'const', 'origin':arg}
+            if arg['value'] in vars:
+                asm[line]['ins'][k] = vars[arg['value']]
+            else:
+                if arg['w'] or arg['r']:
+                    if arg['r'] and is_constant(arg['value']):
+                        type = 'const'
+                        repr = int(arg['value'], 16)
+                    elif is_register(arg['value']):
+                        type = 'temp'
+                        repr = temp_names.next()
                     else:
-                        print "Error: reading nonexistant variable " + arg
-                        if is_register(arg):
-                            vars[arg] = {'type':'temp', 'name':temp_names.next(), 'origin':arg}
-                        else:
-                            vars[arg] = {'type':'var', 'name':var_names.next(), 'origin':arg}
-                        asm[line]['ins'][i] = vars[arg]
+                        type = 'var'
+                        repr = var_names.next()
+                    info = {'type':type, 'repr':repr, 'value': arg['value']}
+                    vars[arg['value']] = info
+                    asm[line]['ins'][k].update(info)
 
     return asm
 
