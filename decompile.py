@@ -60,6 +60,9 @@ def decompile_vertex((t, v), indent=None):
 
     return ''
 
+def is_constant(x):
+    return re.match("-?0x.*", x)
+
 def decompile_ins(ins, indent):
     opcode = ins['ins'][0]
     extra_lambda = None
@@ -80,13 +83,23 @@ def decompile_ins(ins, indent):
 
         fmt = indent.out()+fmt
 
+    def backward_ins(x):
+        for i, arg in enumerate(x[1:], 1):
+            try:
+                x[i] = arg['name']
+            except KeyError:
+                x[i] = arg['origin']
+            except TypeError:
+                x[i] = arg
+        return x
+
     fmt += debug_sprint('\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */', 'misc')
     env = {
         'loc': ins['loc'],
         'length': ins['length'],
         'bin': hexlify(ins['bin']),
-        'instr': ' '.join(ins['ins']),
-        'ins': ins['ins'],
+        'instr': " ".join(backward_ins(ins['ins'])),
+        'ins': backward_ins(ins['ins']),
         'prefix': ins['prefix'],
     }
     extra = ''
@@ -147,31 +160,27 @@ def variable_inference(asm, labels):
     for line, opcode in enumerate(asm):
         for i, arg_mod in enumerate(izip(opcode['ins'][1:], opcode['r'], opcode['w']), 1):
             arg, readable, writable = arg_mod
-            if writable:
-                if arg in vars:
-                    asm[line]['ins'][i] = vars[arg]
-                else:
+            if arg in vars:
+                asm[line]['ins'][i] = vars[arg]
+            else:
+                if writable:
                     if is_register(arg):
-                        temp_name = temp_names.next()
-                        vars[arg] = temp_name + "(" + arg + ")"
+                        vars[arg] = {'type':'temp', 'name':temp_names.next(), 'origin':arg}
                     else:
-                        var_name = var_names.next()
-                        vars[arg] = var_name + "(" + arg + ")"
+                        vars[arg] = {'type':'var', 'name':var_names.next(), 'origin':arg}
+                    asm[line]['ins'][i] = vars[arg] 
 
-                    asm[line]['ins'][i] = vars[arg] 
-            if readable:
-                if arg in vars:
-                    asm[line]['ins'][i] = vars[arg] 
-                else:
-                    if not re.match("-?0x.*", arg ):
+                if readable:
+                    if is_constant(arg):
+                        asm[line]['ins'][i] = {'type':'value', 'origin':arg}
+                    else:
                         print "Error: reading nonexistant variable " + arg
                         if is_register(arg):
-                            temp_name = temp_names.next()
-                            vars[arg] = temp_name + "(" + arg + ")"
+                            vars[arg] = {'type':'temp', 'name':temp_names.next(), 'origin':arg}
                         else:
-                            var_name = var_names.next()
-                            vars[arg] = var_name + "(" + arg + ")"
-                        asm[line]['ins'][i] = vars[arg] 
+                            vars[arg] = {'type':'var', 'name':var_names.next(), 'origin':arg}
+                        asm[line]['ins'][i] = vars[arg]
+
     return asm
 
 def new_var_name():
