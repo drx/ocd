@@ -1,9 +1,10 @@
-from debug import debug_sprint
 from binascii import hexlify
-from decompile_table import decompile_table
 from control_flow import control_flow_graph
-from itertools import izip, starmap, repeat, count
 from copy import copy
+from decompile_table import decompile_table
+from debug import debug_sprint
+from itertools import izip, starmap, repeat, count
+import libdisassemble.opcode86 as opcode86
 import re
 
 def find(f, seq):
@@ -148,12 +149,8 @@ def labelize_functions(functions, labels):
     return functions        
 
 def is_register(x):
-    return x in ("eax", "ebx", "ecx", "edx",
-                 "ebp", "esp",
-                 "esi", "edi", 
-                 "rax", "rcx", "rdx",
-                 "rbp", "rsp",
-                 "r8d") #put all registers here 
+    registers = map(lambda (x,y,z): x, opcode86.regs)
+    return x in registers
 
 def variable_inference(asm, labels):
     var_names = new_var_name()
