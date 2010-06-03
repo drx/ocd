@@ -172,7 +172,7 @@ def variable_inference(asm, labels):
 
                 if readable:
                     if is_constant(arg):
-                        asm[line]['ins'][i] = {'type':'value', 'origin':arg}
+                        asm[line]['ins'][i] = {'type':'const', 'origin':arg}
                     else:
                         print "Error: reading nonexistant variable " + arg
                         if is_register(arg):
