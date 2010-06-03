@@ -149,8 +149,8 @@ def is_register(x):
                  "ebp", "esp",
                  "esi", "edi", 
                  "rax", "rcx", "rdx",
-                 "rbp", "rsp") #put all registers here 
-
+                 "rbp", "rsp",
+                 "r8d") #put all registers here 
 
 def variable_inference(asm, labels):
     var_names = new_var_name()
