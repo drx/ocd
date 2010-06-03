@@ -7,6 +7,7 @@ class Graph:
     def __init__(self):
         self._pred = defaultdict(list)
         self._succ = defaultdict(list)
+        self._edge_values = {}
         self._vertices = {}
 
     def __str__(self):
@@ -51,13 +52,18 @@ class Graph:
     def deg_out(self, k):
         return len(self._succ[k])
 
-    def add_edge(self, v_in, v_out):
+    def add_edge(self, v_in, v_out, value=None):
         self._succ[v_in].append(v_out)
         self._pred[v_out].append(v_in)
+        self._edge_values[(v_in, v_out)] = value
+
+    def edge(self, v_in, v_out):
+        return self._edge_values[(v_in, v_out)]
 
     def remove_edge(self, v_in, v_out):
         self._succ[v_in].remove(v_out)
         self._pred[v_out].remove(v_in)
+        del self._edge_values[(v_in, v_out)]
 
     def export(self, f, name, random=False):
         def block_label(block_type, block_loc, block):
