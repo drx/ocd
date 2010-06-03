@@ -67,6 +67,19 @@ def decompile_ins(ins, indent):
     opcode = ins['ins'][0]
     extra_lambda = None
 
+    def backward_ins(x):
+        print x
+        for i, arg in enumerate(x[1:], 1):
+            try:
+                x[i] = arg['name']
+            except KeyError:
+                x[i] = arg['origin']
+            except TypeError:
+                x[i] = arg
+        return x
+
+    ins['ins'] = backward_ins(ins['ins'])
+
     # special instructions
     if opcode[0] == '!':
         if opcode == '!label':
@@ -83,23 +96,13 @@ def decompile_ins(ins, indent):
 
         fmt = indent.out()+fmt
 
-    def backward_ins(x):
-        for i, arg in enumerate(x[1:], 1):
-            try:
-                x[i] = arg['name']
-            except KeyError:
-                x[i] = arg['origin']
-            except TypeError:
-                x[i] = arg
-        return x
-
     fmt += debug_sprint('\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */', 'misc')
     env = {
         'loc': ins['loc'],
         'length': ins['length'],
         'bin': hexlify(ins['bin']),
-        'instr': " ".join(backward_ins(ins['ins'])),
-        'ins': backward_ins(ins['ins']),
+        'instr': " ".join(ins['ins']),
+        'ins': ins['ins'],
         'prefix': ins['prefix'],
     }
     extra = ''
