@@ -160,7 +160,7 @@ def variable_inference(asm):
                 continue
 
             if arg['value'] in vars:
-                asm[line]['ins'][k] = vars[arg['value']]
+                asm[line]['ins'][k].update(vars[arg['value']])
             else:
                 if arg['w'] or arg['r']:
                     if arg['r'] and is_constant(arg['value']):
@@ -182,6 +182,7 @@ def computation_collapse(asm):
     mem = {}
     for line, ins in enumerate(asm[:]):
         try:
+            print ins['ins']
             if ins['ins']['dest']['type'] == 'temp' and ins['ins']['dest']['w']:
                 mem[ins['ins']['dest']['repr']] = ins['ins'] #we have to do memory lookup on this value
         except KeyError:
