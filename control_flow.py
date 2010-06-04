@@ -58,12 +58,12 @@ class Graph:
         self._edge_values[(v_in, v_out)] = value
 
     def move_predecessors(self, v, v_new):
-        for pred in self.predecessors(v):
+        for pred in self.predecessors(v)[:]:
             self.add_edge(pred, v_new, self.edge(pred, v))
             self.remove_edge(pred, v)
 
     def move_successors(self, v, v_new):
-        for succ in self.successors(v):
+        for succ in self.successors(v)[:]:
             self.add_edge(v_new, succ, self.edge(v, succ))
             self.remove_edge(v, succ)
 
@@ -205,11 +205,12 @@ def graph_transform(graph):
             if graph.deg_out(v) == 2:
                 succs = graph.successors(v)
                 for s1, s2 in permutations(succs):
-                    if graph.deg_out(s1) == 1:
+                    if graph.deg_out(s1) == 1 and graph.deg_in(s1) == 1:
                         s1_succ = graph.successors(s1)[0]
                         if s1_succ == s2:
                             s1_type, s1_start = s1
                             v_new = ('if', s1_start)
+                            snd = lambda (x,y): y
                             condition = '!'+graph.edge(v, s2)
                             v_new_value = (condition, (s1, graph.vertex(s1)))
                             graph.set_vertex(v_new, v_new_value)
@@ -233,7 +234,7 @@ def graph_transform(graph):
                     if map(len, [s_s, t_s, s_p, t_p]) == [1]*4 and s_s == t_s:
                         s_type, s_start = s
                         v_new = ('ifelse', s_start)
-                        condition = graph.edge(v,s) # change that
+                        condition = graph.edge(v,s)
                         # modify v
                         v_new_value = (condition,
                             (s, graph.vertex(s)), (t, graph.vertex(t)))
@@ -269,7 +270,7 @@ def graph_transform(graph):
 
         return (False, graph) 
 
-    rules = [t_trivial, t_ifelse, t_cons, t_if, t_while]
+    rules = [t_trivial, t_ifelse, t_if, t_while, t_cons]
 
     i = dropwhile(lambda (x, y): not x, map(flip(graph), rules))
     try:
