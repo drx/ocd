@@ -185,23 +185,26 @@ def variable_inference(asm):
 
 def computation_collapse(asm):
     mem = {}
+    code = []
 
     def lookup_vars(ins, mem):
+        for k in ('src', 'dest'):
+            if 'ins' in ins and k in ins['ins'] and 'ins' in ins['ins'][k] and 'dest' not in ins['ins'][k]['ins']:
+                if ins['ins'][k]['repr'] in mem:
+                    ins['ins'][k] = mem[ins['ins'][k]['repr']]
+            elif 'ins' in ins and k in ins['ins']:
+                ins['ins'][k] = lookup_vars(ins['ins'][k], mem)
         return ins
 
     for line, ins in enumerate(asm[:]):
         if 'dest' not in ins['ins']:
-            continue
+            code.append(ins)
         else:
             if ins['ins']['dest']['w'] and ins['ins']['dest']['type'] == 'temp': 
-                mem[ins['ins']['dest']['repr']] = lookup_vars(ins['ins'], mem)
-                #remove the asm line
+                mem[ins['ins']['dest']['repr']] = lookup_vars(ins, mem)
             else:
-                #update current asm line
-                pass
-    
-    print mem
-    return asm
+                code.append(lookup_vars(ins,mem))
+    return code
 
 def new_var_name():
     for n in count(0):
@@ -215,7 +218,9 @@ def decompile_function(asm, labels, name):
     signature = infer_signature(asm)
     pre, post = output_signature(signature, name)
     
-    asm = computation_collapse(variable_inference(asm))
+    asm = variable_inference(asm)
+    collapsed_code = computation_collapse(asm)
+    #collapsed_code - print it
     cfg = control_flow_graph(asm, labels, name)
 
     return pre + decompile(cfg) + post
