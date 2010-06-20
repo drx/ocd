@@ -65,6 +65,9 @@ def decompile_vertex((t, v), indent=None):
 
     return ''
 
+def has_instruction_inside(ins, k):
+    return 'ins' in ins and k in ins['ins'] and 'ins' in ins['ins'][k]
+
 def is_constant(x):
     return re.match("-?0x.*", x)
 
@@ -79,7 +82,10 @@ def decompile_ins(ins, indent):
         try:
             ins['ins'][k] = ins['ins'][k]['repr']
         except KeyError:
-            pass
+            try:
+                ins['ins'][k] = ins['ins'][k]['value']
+            except KeyError:
+                print ins['ins'][k] #hmm
 
     # special instructions
     if opcode[0] == '!':
@@ -96,6 +102,54 @@ def decompile_ins(ins, indent):
             fmt = '// {env[ins]}'
 
         fmt = indent.out()+fmt
+
+    env = {
+        'loc': ins['loc'],
+        'length': ins['length'],
+        'ins': ins['ins'],
+    }
+    if debug.check('misc'):
+        from binascii import hexlify
+        fmt += '\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */'
+        env['bin'] = hexlify(ins['debug']['binary'])
+        env['prefix'] = ins['debug']['prefix']
+
+    extra = ''
+    if extra_lambda:
+        extra = extra_lambda(env)
+
+    return fmt.format(i=ins['ins'], extra=extra, env=env)
+
+def decompile_inner_ins(ins):
+    opcode = ins['ins']['op']
+    extra_lambda = None
+
+    # would be nice to find a nicer way to do this
+    for k, arg in ins['ins'].iteritems():
+        if k not in ('src', 'dest'):
+            continue
+        try:
+            ins['ins'][k] = ins['ins'][k]['repr']
+        except KeyError:
+            ins['ins'][k] = ins['ins'][k]['value']
+
+    # special instructions
+    if opcode[0] == '!':
+        if opcode == '!label':
+            fmt = '{i[1]}:'
+
+    elif opcode[0] == 'j':
+        return ''
+        
+    else:
+        for k in ('src', 'dest'):
+            if has_instruction_inside(ins, k):
+                #do magic
+                pass
+        try:
+            i, lhs, fmt, extra_lambda = find(lambda t: t[0] == opcode, decompile_table)
+        except LookupError:
+            fmt = '/* {env[ins]} */'
 
     env = {
         'loc': ins['loc'],
@@ -185,23 +239,26 @@ def variable_inference(asm):
 
 def computation_collapse(asm):
     mem = {}
+    code = []
 
     def lookup_vars(ins, mem):
+        for k in ('src', 'dest'):
+            if 'ins' in ins and k in ins['ins'] and 'ins' in ins['ins'][k] and 'dest' not in ins['ins'][k]['ins']:
+                if ins['ins'][k]['repr'] in mem:
+                    ins['ins'][k] = mem[ins['ins'][k]['repr']]
+            elif 'ins' in ins and k in ins['ins']:
+                ins['ins'][k] = lookup_vars(ins['ins'][k], mem)
         return ins
 
     for line, ins in enumerate(asm[:]):
         if 'dest' not in ins['ins']:
-            continue
+            code.append(ins)
         else:
             if ins['ins']['dest']['w'] and ins['ins']['dest']['type'] == 'temp': 
-                mem[ins['ins']['dest']['repr']] = lookup_vars(ins['ins'], mem)
-                #remove the asm line
+                mem[ins['ins']['dest']['repr']] = lookup_vars(ins, mem)
             else:
-                #update current asm line
-                pass
-    
-    print mem
-    return asm
+                code.append(lookup_vars(ins,mem))
+    return code
 
 def new_var_name():
     for n in count(0):
@@ -215,8 +272,10 @@ def decompile_function(asm, labels, name):
     signature = infer_signature(asm)
     pre, post = output_signature(signature, name)
     
-    asm = computation_collapse(variable_inference(asm))
+    asm = variable_inference(asm)
+    clp_asm = computation_collapse(asm)
     cfg = control_flow_graph(asm, labels, name)
+    #cfg = control_flow_graph(clp_asm, labels, name)
 
     return pre + decompile(cfg) + post
 

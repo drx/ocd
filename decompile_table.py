@@ -1,32 +1,32 @@
 decompile_table = [
-('aaa', 'BCD_AAA();', None),
-('aad', 'BCD_AAD();', None),
-('aam', 'BCD_AAM();', None),
-('aas', 'BCD_AAS();', None),
-('adc', '{i[dest]} += {i[src]} + {cf};', None),
-('add', '{i[dest]} += {i[src]};', None),
-('addpd', '{i[dest]} = _mm_add_pd({i[1]},{i[src]});', None),
-('addps', '{i[dest]} = _mm_add_ps({i[1]},{i[src]});', None),
-('addsd', '{i[dest]} = _mm_add_sd({i[1]},{i[src]});', None),
-('addss', '{i[dest]} = _mm_add_ss({i[1]},{i[src]});', None),
-('addsubpd', '{i[dest]} = _mm_addsub_pd({i[1]},{i[src]});', None),
-('addsubps', '{i[dest]} = _mm_addsub_ps({i[1]},{i[src]});', None),
-('aesdec', '{i[dest]} = _mm_aesdec({i[1]},{i[src]});', None),
-('aesdeclast', '{i[dest]} = _mm_aesdeclast({i[1]},{i[src]});', None),
-('aesenc', '{i[dest]} = _mm_aesenc({i[1]},{i[src]});', None),
-('aesdeclast', '{i[dest]} = _mm_aesendlast({i[1]},{i[src]});', None),
-('aesimc', '{i[dest]} = _mm_aesimc({i[src]});', None),
-('aeskeygenassist', '{i[dest]} = _mm_aesimc({i[1]},{i[src]});', None),
-('and', '{i[dest]} &= {i[src]};', None),
-('andpd', '{i[dest]} = _mm_and_pd({i[1]},{i[src]});', None),
-('andps', '{i[dest]} = _mm_and_ps({i[1]},{i[src]});', None),
-('andnpd', '{i[dest]} = _mm_andnot_pd({i[1]},{i[src]});', None),
-('andnps', '{i[dest]} = _mm_andnot_ps({i[1]},{i[src]});', None),
+#('aaa', 'BCD_AAA();', None),
+#('aad', 'BCD_AAD();', None),
+#('aam', 'BCD_AAM();', None),
+#('aas', 'BCD_AAS();', None),
+('adc', '{i[dest]} = {i[dest]} + {i[src]} + {cf};', None),
+('add', '{i[dest]} = {i[dest]} + {i[src]};', None),
+#('addpd', '{i[dest]} = _mm_add_pd({i[1]},{i[src]});', None),
+#('addps', '{i[dest]} = _mm_add_ps({i[1]},{i[src]});', None),
+#('addsd', '{i[dest]} = _mm_add_sd({i[1]},{i[src]});', None),
+#('addss', '{i[dest]} = _mm_add_ss({i[1]},{i[src]});', None),
+#('addsubpd', '{i[dest]} = _mm_addsub_pd({i[1]},{i[src]});', None),
+#('addsubps', '{i[dest]} = _mm_addsub_ps({i[1]},{i[src]});', None),
+#('aesdec', '{i[dest]} = _mm_aesdec({i[1]},{i[src]});', None),
+#('aesdeclast', '{i[dest]} = _mm_aesdeclast({i[1]},{i[src]});', None),
+#('aesenc', '{i[dest]} = _mm_aesenc({i[1]},{i[src]});', None),
+#('aesdeclast', '{i[dest]} = _mm_aesendlast({i[1]},{i[src]});', None),
+#('aesimc', '{i[dest]} = _mm_aesimc({i[src]});', None),
+#('aeskeygenassist', '{i[dest]} = _mm_aesimc({i[1]},{i[src]});', None),
+('and', '{i[dest]} = {i[dest]} & {i[src]};', None),
+#('andpd', '{i[dest]} = _mm_and_pd({i[1]},{i[src]});', None),
+#('andps', '{i[dest]} = _mm_and_ps({i[1]},{i[src]});', None),
+#('andnpd', '{i[dest]} = _mm_andnot_pd({i[1]},{i[src]});', None),
+#('andnps', '{i[dest]} = _mm_andnot_ps({i[1]},{i[src]});', None),
 #('arpl', - some weird things - x86 is the stuff
-('blendpd', '{i[dest]} = _mm_blend_pd({i[1]},{i[src]},{i[2]});', None),
-('blendps', '{i[dest]} = _mm_blend_ps({i[1]},{i[src]},{i[2]});', None),
-('blendvpd', '{i[dest]} = _mm_blendv_pd({i[1]},{i[src]},{i[2]});', None),
-('blendvps', '{i[dest]} = _mm_blendv_ps({i[1]},{i[src]},{i[2]});', None),
+#('blendpd', '{i[dest]} = _mm_blend_pd({i[1]},{i[src]},{i[2]});', None),
+#('blendps', '{i[dest]} = _mm_blend_ps({i[1]},{i[src]},{i[2]});', None),
+#('blendvpd', '{i[dest]} = _mm_blendv_pd({i[1]},{i[src]},{i[2]});', None),
+#('blendvps', '{i[dest]} = _mm_blendv_ps({i[1]},{i[src]},{i[2]});', None),
 ('bound', 'if({i[dest]}<{i[src][0:15]}||{i[1]}>{i[2][16:31]}){#br};', None),#32 and 64bit - have to add some unified variable divider
 ('bsf','''
     if(!{i[src]})
@@ -80,14 +80,14 @@ decompile_table = [
 # operand length dependent
 ('clc', '{cf} = 0;}', None),
 ('cld', '{df} = 0;}', None),
-('clflush', '_mm_clflush({i[dest]});', None),
+#('clflush', '_mm_clflush({i[dest]});', None),
 #('cli', - many lines of code to which tools don't exist yet
 ('clts', '{cr0.ts[3] = 0}', None),
 ('cmc', '{eflags.cf[0]} = ~{eflags.cf[0]}', None),
 ('cmp', 'cmp = {i[dest]} - {i[src]};', None),
 #('cmovcc - is wildcard available here? many variations of the name
 
-('dec', '{i[dest]}--;', None),
+('dec', '{i[dest]} = {i[dest]} - 1;', None),
 ('ja', 'if (cmp > 0) goto loc_{extra:x};', lambda env: jump(env)),
 ('jae', 'if (cmp >= 0) goto loc_{extra:x};', lambda env: jump(env)),
 ('jb', 'if (cmp < 0) goto loc_{extra:x};', lambda env: jump(env)),
@@ -128,7 +128,7 @@ decompile_table = [
 #('pop', '
 #('push', '
 ('return', 'return {i[dest]};', None),
-('sub', '{i[dest]} -= {i[src]};', None),
+('sub', '{i[dest]} = {i[dest]} - {i[src]};', None),
 ]
 
 condition_negs = {
