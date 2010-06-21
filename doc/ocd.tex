@@ -1,0 +1,50 @@
+\documentclass[leqno,11pt]{article}
+\usepackage{a4wide}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{url}
+%\textwidth 19cm
+%\oddsidemargin -1.54cm
+
+\setlength\parskip{0.13in}
+
+\title{ocd - ocd c decompiler}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+ocd is a C decompiler written in Python, currently supporting decompilation of programs compiled for the x64 architecture. The internal data structures used for instructions are quite universal, so it should be trivial to add additional architectures as they are needed, as well as new output languages. The decompiler performs some inferences as to the program structure (such as control and data flow analysis).
+
+\section{Using ocd}
+
+ocd reads a specified object file, performs decompilation on it and prints the results on standard output. It can also output a set of control flow graphs in dot format. 
+\\ The usage of the program is as follows:
+
+\input{usage}
+
+An example control flow graph looks like this:
+
+\includegraphics[width=15cm]{images/cfg_example.eps}
+
+\section{Operation}
+
+ocd operates on magic. Also, children are not stupid, they're just children.
+
+\section{Contributing to ocd}
+
+ocd uses git as its SCM. The master repository is hosted at \url{http://github.com/drx/ocd}. If you want to contribute to the project, you can ask the current maintainer to add you to the contributors list. Alternatively, you can fork the project and then request that your changes be merged to the original project.
+
+\section{Copyright}
+
+\input{copyright}
+
+\end{document}
