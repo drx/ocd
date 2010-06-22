@@ -78,8 +78,8 @@ decompile_table = [
 #('cdqe', '''
 #    ''') 
 # operand length dependent
-('clc', '{cf} = ', '0;}', None),
-('cld', '{df} = ', '0;}', None),
+('clc', '{cf} = ', '0;', None),
+('cld', '{df} = ', '0;', None),
 #('clflush', '_mm_clflush({i[dest]});', None),
 #('cli', - many lines of code to which tools don't exist yet
 #('clts', '{cr0.ts[3] = 0}', None),
@@ -122,7 +122,7 @@ decompile_table = [
 ('jnz', 'if (cmp) goto loc_{extra:x};', '', lambda env: jump(env)),
 ('jz', 'if (!cmp) goto loc_{extra:x};', '', lambda env: jump(env)),
 ('jmp', 'goto loc_{extra:x};', '', lambda env: jump(env)),
-('lea','{i[dest]} = ', '{i[src]}', None),
+('lea','{i[dest]} = ', '{i[src]};', None),
 ('leave', '', '', None),
 ('mov', '{i[dest]} = ', '{i[src]};', None),
 #('pop', '
