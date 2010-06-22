@@ -86,7 +86,7 @@ decompile_table = [
 #('cmc', '{eflags.cf[0]} = ~{eflags.cf[0]}', None),
 ('cmp', 'cmp = ', '{i[dest]} - {i[src]};', None),
 #('cmovcc - is wildcard available here? many variations of the name
-
+('imul', '{i[dest]} = ', '{i[dest]} * {i[src]};', None),
 ('dec', '{i[dest]} = ', '{i[dest]} - 1;', None),
 ('ja', 'if (cmp > 0) goto loc_{extra:x};', '', lambda env: jump(env)),
 ('jae', 'if (cmp >= 0) goto loc_{extra:x};', '', lambda env: jump(env)),

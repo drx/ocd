@@ -103,10 +103,9 @@ def decompile_ins(ins, indent, inner):
         return ''
         
     else:
-  #     for k in ('src', 'dest'):
-  #         if has_instruction_inside(ins, k):
-  #             ins['ins'][k] = '(' + decompile_ins(ins['ins'][k], indent, True) + ')'
-  #             pass
+        for k in ('src', 'dest'):
+           if has_instruction_inside(ins, k):
+               ins['ins'][k] = '(' + decompile_ins(ins['ins'][k], indent, True) + ')'
         try:
             i, lhs, rhs, extra_lambda = find(lambda t: t[0] == opcode, decompile_table)
             if inner:
@@ -245,7 +244,7 @@ def computation_collapse(asm):
         return ins
 
     for ins in copy.deepcopy(asm):
-        for k in ('dest'):
+        for k in ('dest'):#here, in the future will appear a way to distinct writing to src/dest at the same time with different data
             if has_field(ins, k):
                 if is_writable(ins, k) and is_temp_comp(ins, k): 
                     mem[ins['ins'][k]['repr']] = lookup_vars(ins, mem)
@@ -275,6 +274,23 @@ def decompile_function(asm, labels, name):
 
     return pre + decompile(cfg) + post
 
+def postprocessor(output):
+    mem = {}
+    pr = ""
+    for line in copy.deepcopy(output).splitlines(True):
+        m = re.search("\s+(temp_.*?)\s+=\s+(.*?);", line)
+        if m:
+            v = m.group(2)
+            for key, val in mem.iteritems():
+                v = v.replace(key, val)
+            mem[m.group(1)] = v
+        else:
+            for key, val in mem.iteritems():
+                line = line.replace(key, val)
+
+            pr = pr + line
+    return pr
+
 def decompile_functions(functions, symbols):
     labels = get_labels(functions)
     rfunctions = labelize_functions(functions, labels)
@@ -283,5 +299,7 @@ def decompile_functions(functions, symbols):
     for name, symbol in symbols.iteritems():
         output += decompile_function(functions[name], labels, name)
         output += '\n'
-
+    
+    output = postprocessor(output)
+    
     return output
