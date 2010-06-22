@@ -130,6 +130,7 @@ copyright:
 
 cfg_example:
 	if [ ! -d images ]; then mkdir images; fi
+	(cd ../tests; make all)
 	(cd ..; ./ocd.py -g ./doc/temp_graph ./tests/test_ack >/dev/null)
 	../graph2png.sh temp_graph
 	convert temp_graph.png ./images/cfg_example.eps
