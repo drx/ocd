@@ -37,7 +37,18 @@ An example control flow graph looks like this:
 
 \section{Operation}
 
-ocd operates on magic. Also, children are not stupid, they're just children.
+\subsection{Overview}
+
+The decompilation occurs in stages. The program is built to be modular and each stage is separate. The stages are shown in figure \ref{fig:graph_stages}.
+
+\begin{figure}
+\includegraphics[height=10cm]{images/graph_stages.eps}
+\centering
+\caption{Stages of decompilation}
+\label{fig:graph_stages}
+\end{figure}
+
+\subsection{Control flow analysis}
 
 \section{Contributing to ocd}
 

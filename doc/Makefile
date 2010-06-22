@@ -111,7 +111,7 @@ veryclean	: clean
 	  -rm -f *.log *.aux *.dvi *.bbl *.blg *.ilg *.toc *.lof *.lot *.idx *.ind *.ps  *~
 
 # This is a rule to generate a file of prerequisites for a given .tex file
-%.d	: %.tex
+%.d	: %.tex usage copyright cfg_example cfg_images
 	$(get_dependencies) ; echo $$deps ; \
 	$(getbibs) ; echo $$bibs ; \
 	$(geteps) ; echo $$epses ; \
@@ -131,14 +131,17 @@ copyright:
 	echo '\\end{verbatim}' >> copyright.tex
 
 cfg_example:
-	@mkdir images
-	(cd ..; ./ocd.py -g ./doc/temp_graph ./tests/test_ack)
+	if [ ! -d images ]; then mkdir images; fi
+	(cd ..; ./ocd.py -g ./doc/temp_graph ./tests/test_ack >/dev/null)
 	../graph2png.sh temp_graph
 	convert temp_graph.png ./images/cfg_example.eps
 	rm temp_graph temp_graph.png
 
+cfg_images:
+	for x in images/*.dot; do echo $$x; y=`echo $$x | sed s\/\.dot\/\/`; dot -Tps -Nfontname=Verdana -Gfontname=Verdana $$x -o $$y.eps; done
+
 # $(DEP) $(EPSPICS) $(BIBFILE)
-$(TRG)	: %.dvi : %.tex usage copyright cfg_example
+$(TRG)	: %.dvi : %.tex
 	  @$(run-latex)
 
 $(PSF)	: %.ps : %.dvi
