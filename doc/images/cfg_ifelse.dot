@@ -1,0 +1,10 @@
+digraph cfg_if {
+    a [label=""];
+    b [label=""];
+    c [label=""];
+    d [label=""];
+    a -> b;
+    a -> c;
+    b -> d;
+    c -> d;
+}

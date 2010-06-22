@@ -1,0 +1,13 @@
+digraph graph_stages {
+    1 [label="Object dump"];
+    2 [label="Disassembly"];
+    3 [label="Variable inference"]
+    subgraph cluster_cf {
+        4 [label="Control flow graph\ngeneration"];
+        5 [label="Control flow graph\nreduction"];
+        label = "Control flow analysis";
+        style = dotted;
+    }
+    6 [label="Program output"];
+    1 -> 2 -> 3 -> 4 -> 5 -> 6;
+}
