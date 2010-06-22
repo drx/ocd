@@ -58,10 +58,14 @@ if __name__=="__main__":
 
 
     functions = {}
-
-    for name, symbol in symbols.iteritems():
-        f.seek(symbol['start']-text['virt']+text['start'])
-        functions[name] = disassemble(f.read(symbol['length']), symbol['start'])
+    if symbols:
+        for name, symbol in symbols.iteritems():
+            f.seek(symbol['start']-text['virt']+text['start'])
+            functions[name] = disassemble(f.read(symbol['length']), symbol['start'])
+    else:
+        f.seek(text['start'])
+        functions['start'] = disassemble(f.read(text['length']), text['virt'])
+        symbols['start'] = {'start': text['virt'], 'length': text['length']}
 
     print decompile_functions(functions, symbols)
 
