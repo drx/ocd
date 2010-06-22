@@ -85,10 +85,12 @@ def decompile_ins(ins, indent, inner):
             try:
                 ins['ins'][k] = ins['ins'][k]['value']
             except KeyError:
-                print "<KeyError>"
+                pass
+                #print "<KeyError>"
                 #print ins['ins'][k] #hmm
         except TypeError:
-            print "<TypeError>"
+            pass
+            #print "<TypeError>"
             #print ins
 
     # special instructions
@@ -111,12 +113,11 @@ def decompile_ins(ins, indent, inner):
             else:
                 fmt = indent.out() + lhs + rhs
         except LookupError:
-            if inner:
+            if 0 and inner:
                 fmt = '/* {env[ins]} */'
             else:
                 fmt = indent.out() + '// {env[ins]}'
 
-    
     env = {
         'loc': ins['loc'],
         'length': ins['length'],
@@ -268,7 +269,7 @@ def decompile_function(asm, labels, name):
     pre, post = output_signature(signature, name)
     
     asm = variable_inference(asm)
-    clp_asm = computation_collapse(asm)
+    #clp_asm = computation_collapse(asm) ALISTRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     cfg = control_flow_graph(asm, labels, name)
     #cfg = control_flow_graph(clp_asm, labels, name)
 
