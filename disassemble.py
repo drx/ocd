@@ -106,18 +106,22 @@ def repr_x64(ins, r, w):
     def arg(n):
         return {'value': ins[n+1], 'r': r[n], 'w': w[n]}
 
+    def jump_dest(ins):
+        dest = {'type':'const', 'value': ins[1], 'repr': repr, 'r': True, 'w': False}
+        try:
+            dest['repr'] = int(ins[1],16)
+        except ValueError:
+            pass
+        return dest
+
+
     if ins[0][0] == 'j':
         cond = ins[0][1:]
         if cond == 'mp':
             cond = 'true'
-        try:
-            dest = {'type':'const', 'value': ins[1], 'repr': int(ins[1],16), 'r': True, 'w': False}
-            return {'op': 'jump', 'cond': cond, 'dest': dest}
-        except ValueError:
-            return {'op': ins[0]}
+        return {'op': 'jump', 'cond': cond, 'dest': jump_dest(ins)}
     elif ins[0] == 'call':
-        dest = {'type':'const', 'value': ins[1], 'repr': int(ins[1],16), 'r': True, 'w': False}
-        return {'op': 'call', 'dest': dest}
+        return {'op': 'call', 'dest': jump_dest(ins)}
     elif ins[0] == 'ret':
         dest = {'value': 'eax', 'r': True, 'w': False}
         return {'op': 'return', 'dest': dest}
@@ -156,7 +160,7 @@ def disassemble_x64_int(buf, virt):
     FORMAT="INTEL"
     entries = [virt]
 
-    result = OrderedDict()
+    result = {}
     while entries:
         addr = entries.pop()
         off = addr-virt
@@ -182,17 +186,18 @@ def disassemble_x64_int(buf, virt):
 #                    entries.append(j_addr)
             if ins['op'] == 'jump':
                 j_addr = addr+length+ins['dest']['repr']
-                if j_addr not in result:
-                    entries.append(j_addr)
+#                if j_addr not in result:
+                entries.append(j_addr)
                 if ins['cond'] == 'true':
                     break
             off += length
             addr += length
     
-    return result.values()
+    return [result[key] for key in sorted(result.keys())]
 
 def disassemble(buf, virt, arch='x64'):
     archs = {
         'x64': disassemble_x64_int
+
     }
     return archs[arch](buf, virt)

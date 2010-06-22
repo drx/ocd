@@ -5,6 +5,7 @@ from itertools import izip, starmap, repeat, count
 import debug
 import libdisassemble.opcode86 as opcode86
 import re
+import zlib
 
 def find(f, seq):
     for item in seq:
@@ -71,6 +72,18 @@ def is_constant(x):
 def decompile_ins_outer(ins, indent):
     return decompile_ins(ins, indent, False)
 
+"""
+Get the representation of an integer.
+
+The representation is chosen based on its Kolmogorov complexity,
+ i.e. the repr r is chosen which has the minimal value
+ len(zlib.compress(r))
+"""
+def repr_int(i):
+    reprs = [('{0}','{0}'), ('{0:x}', '0x{0:x}')]
+    lengths = [len(zlib.compress(r[0].format(i))) for r in reprs]
+    return reprs[lengths.index(min(lengths))][1].format(i)
+
 def decompile_ins(ins, indent, inner):
     opcode = ins['ins']['op']
     extra_lambda = None
@@ -81,6 +94,8 @@ def decompile_ins(ins, indent, inner):
             continue
         try:
             ins['ins'][k] = ins['ins'][k]['repr']
+            if type(ins['ins'][k]) == int:
+                ins['ins'][k] = repr_int(ins['ins'][k])
         except KeyError:
             try:
                 ins['ins'][k] = ins['ins'][k]['value']
