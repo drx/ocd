@@ -2,6 +2,7 @@ from control_flow import control_flow_graph
 from copy import copy
 from decompile_table import conditions, condition_negs, decompile_table
 from itertools import izip, starmap, repeat, count
+from postprocessor import postprocessor
 import debug
 import libdisassemble.opcode86 as opcode86
 import re
@@ -113,7 +114,7 @@ def decompile_ins(ins, indent, inner):
             else:
                 fmt = indent.out() + lhs + rhs
         except LookupError:
-            if 0 and inner:
+            if inner:
                 fmt = '/* {env[ins]} */'
             else:
                 fmt = indent.out() + '// {env[ins]}'
@@ -273,23 +274,6 @@ def decompile_function(asm, labels, name):
     #cfg = control_flow_graph(clp_asm, labels, name)
 
     return pre + decompile(cfg) + post
-
-def postprocessor(output):
-    mem = {}
-    pr = ""
-    for line in copy.deepcopy(output).splitlines(True):
-        m = re.search("\s*(temp_.*?)\s*=\s*(.*?);", line)
-        if m:
-            v = m.group(2)
-            for key, val in mem.iteritems():
-                v = v.replace(key, "({0})".format(val))
-            mem[m.group(1)] = v
-        else:
-            for key, val in mem.iteritems():
-                line = line.replace(key, "({0})".format(val))
-
-            pr = pr + line
-    return pr
 
 def decompile_functions(functions, symbols):
     labels = get_labels(functions)
