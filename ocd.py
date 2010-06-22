@@ -46,6 +46,9 @@ if __name__=="__main__":
         sys.exit(0)
 
     filename = args[0]
+
+    f = open(filename)
+
     text, symbols = objdump(filename)
 
     if options.graphfile:
@@ -53,7 +56,6 @@ if __name__=="__main__":
         gf.write("digraph cfg {\n")
         control_flow.graphfile = gf
 
-    f = open(filename)
 
     functions = {}
 
