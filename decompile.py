@@ -37,7 +37,7 @@ def decompile_vertex((t, v), indent=None):
     if indent is None:
         indent = Indent(1)
     if block_type == 'block':
-        return '\n'.join(starmap(decompile_ins, izip(v, repeat(indent))))
+        return '\n'.join(starmap(decompile_ins_outer, izip(v, repeat(indent))))
 
     elif block_type == 'if':
         cond, block = v
@@ -65,13 +65,13 @@ def decompile_vertex((t, v), indent=None):
 
     return ''
 
-def has_instruction_inside(ins, k):
-    return 'ins' in ins and k in ins['ins'] and 'ins' in ins['ins'][k]
-
 def is_constant(x):
     return re.match("-?0x.*", x)
 
-def decompile_ins(ins, indent):
+def decompile_ins_outer(ins, indent):
+    return decompile_ins(ins, indent, False)
+
+def decompile_ins(ins, indent, inner):
     opcode = ins['ins']['op']
     extra_lambda = None
 
@@ -85,7 +85,11 @@ def decompile_ins(ins, indent):
             try:
                 ins['ins'][k] = ins['ins'][k]['value']
             except KeyError:
-                print ins['ins'][k] #hmm
+                print "<KeyError>"
+                #print ins['ins'][k] #hmm
+        except TypeError:
+            print "<TypeError>"
+            #print ins
 
     # special instructions
     if opcode[0] == '!':
@@ -96,66 +100,29 @@ def decompile_ins(ins, indent):
         return ''
         
     else:
+  #     for k in ('src', 'dest'):
+  #         if has_instruction_inside(ins, k):
+  #             ins['ins'][k] = '(' + decompile_ins(ins['ins'][k], indent, True) + ')'
+  #             pass
         try:
-            i, fmt, extra_lambda = find(lambda t: t[0] == opcode, decompile_table)
+            i, lhs, rhs, extra_lambda = find(lambda t: t[0] == opcode, decompile_table)
+            if inner:
+                fmt = rhs
+            else:
+                fmt = indent.out() + lhs + rhs
         except LookupError:
-            fmt = '// {env[ins]}'
+            if inner:
+                fmt = '/* {env[ins]} */'
+            else:
+                fmt = indent.out() + '// {env[ins]}'
 
-        fmt = indent.out()+fmt
-
+    
     env = {
         'loc': ins['loc'],
         'length': ins['length'],
         'ins': ins['ins'],
     }
-    if debug.check('misc'):
-        from binascii import hexlify
-        fmt += '\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */'
-        env['bin'] = hexlify(ins['debug']['binary'])
-        env['prefix'] = ins['debug']['prefix']
 
-    extra = ''
-    if extra_lambda:
-        extra = extra_lambda(env)
-
-    return fmt.format(i=ins['ins'], extra=extra, env=env)
-
-def decompile_inner_ins(ins):
-    opcode = ins['ins']['op']
-    extra_lambda = None
-
-    # would be nice to find a nicer way to do this
-    for k, arg in ins['ins'].iteritems():
-        if k not in ('src', 'dest'):
-            continue
-        try:
-            ins['ins'][k] = ins['ins'][k]['repr']
-        except KeyError:
-            ins['ins'][k] = ins['ins'][k]['value']
-
-    # special instructions
-    if opcode[0] == '!':
-        if opcode == '!label':
-            fmt = '{i[1]}:'
-
-    elif opcode[0] == 'j':
-        return ''
-        
-    else:
-        for k in ('src', 'dest'):
-            if has_instruction_inside(ins, k):
-                #do magic
-                pass
-        try:
-            i, lhs, fmt, extra_lambda = find(lambda t: t[0] == opcode, decompile_table)
-        except LookupError:
-            fmt = '/* {env[ins]} */'
-
-    env = {
-        'loc': ins['loc'],
-        'length': ins['length'],
-        'ins': ins['ins'],
-    }
     if debug.check('misc'):
         from binascii import hexlify
         fmt += '\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */'
@@ -237,27 +204,55 @@ def variable_inference(asm):
 
     return asm
 
+def has_field(ins, k):
+    if type(ins) == dict and 'ins' in ins and k in ins['ins']:
+        return True
+    else:
+        return False
+
+def has_instruction_inside(ins, k):
+    if has_field(ins, k) and type(ins['ins'][k]) == dict and 'ins' in ins['ins'][k]:
+        return True
+    else:
+        return False
+
+def is_writable(ins, k):
+    if has_field(ins, k) and type(ins['ins'][k]) == dict and 'w' in ins['ins'][k] and ins['ins'][k]['w']:
+        return True
+    else:
+        return False
+
+def is_temp_comp(ins, k):
+    if has_field(ins, k) and type(ins['ins'][k]) == dict and ins['ins'][k]['type'] == 'temp':
+        return True
+    else:
+        return False
+
 def computation_collapse(asm):
     mem = {}
     code = []
 
     def lookup_vars(ins, mem):
         for k in ('src', 'dest'):
-            if 'ins' in ins and k in ins['ins'] and 'ins' in ins['ins'][k] and 'dest' not in ins['ins'][k]['ins']:
-                if ins['ins'][k]['repr'] in mem:
-                    ins['ins'][k] = mem[ins['ins'][k]['repr']]
-            elif 'ins' in ins and k in ins['ins']:
-                ins['ins'][k] = lookup_vars(ins['ins'][k], mem)
+            if has_instruction_inside(ins, k):
+                # ins['ins'][k] = lookup_vars(ins['ins'][k], mem) do some inf loop stuff
+                pass
+            elif has_field(ins, k) and 'repr' in ins['ins'][k] and ins['ins'][k]['repr'] in mem:
+                ins['ins'][k] = mem[ins['ins'][k]['repr']]
+            else:
+                continue #doesn't have the k field
         return ins
 
-    for line, ins in enumerate(asm[:]):
-        if 'dest' not in ins['ins']:
-            code.append(ins)
-        else:
-            if ins['ins']['dest']['w'] and ins['ins']['dest']['type'] == 'temp': 
-                mem[ins['ins']['dest']['repr']] = lookup_vars(ins, mem)
-            else:
-                code.append(lookup_vars(ins,mem))
+    for ins in asm[:]:
+        for k in ('src', 'dest'):
+            if has_field(ins, k):
+                if is_writable(ins, k) and is_temp_comp(ins, k): 
+                    mem[ins['ins'][k]['repr']] = lookup_vars(ins, mem)
+                else:
+                    code.append(lookup_vars(ins, mem))
+            else: #no dest field
+                code.append(lookup_vars(ins, mem))
+
     return code
 
 def new_var_name():
