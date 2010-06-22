@@ -299,6 +299,6 @@ def decompile_functions(functions, symbols):
         output += decompile_function(functions[name], labels, name)
         output += '\n'
     
-    output = postprocessor(output) #comment for disable
+    #output = postprocessor(output) #comment for disable
     
     return output

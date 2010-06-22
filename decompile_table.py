@@ -127,8 +127,10 @@ decompile_table = [
 ('mov', '{i[dest]} = ', '{i[src]};', None),
 #('pop', '
 #('push', '
+('nop', '', '', None),
 ('return', 'return {i[dest]};', '', None),
 ('sub', '{i[dest]} = ', '{i[dest]} - {i[src]};', None),
+('xor', '{i[dest]} = ', '{i[dest]} ^ {i[src]};', None),
 ]
 
 condition_negs = {

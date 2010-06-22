@@ -119,14 +119,14 @@ veryclean	: clean
 include $(SRC:.tex=.d)
 
 usage:
-	echo '\\begin{verbatim}' > usage.tex
+	echo "\\begin{verbatim}" > usage.tex
 	../ocd.py --help >> usage.tex
-	echo '\\end{verbatim}' >> usage.tex
+	echo "\\end{verbatim}" >> usage.tex
 
 copyright:
-	echo '\\begin{verbatim}' > copyright.tex
+	echo "\\begin{verbatim}" > copyright.tex
 	cat ../LICENSE >> copyright.tex
-	echo '\\end{verbatim}' >> copyright.tex
+	echo "\\end{verbatim}" >> copyright.tex
 
 cfg_example:
 	if [ ! -d images ]; then mkdir images; fi
