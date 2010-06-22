@@ -2,6 +2,8 @@ from control_flow import control_flow_graph
 from copy import copy
 from decompile_table import conditions, condition_negs, decompile_table
 from itertools import izip, starmap, repeat, count
+from postprocessor import postprocessor
+import copy
 import debug
 import libdisassemble.opcode86 as opcode86
 import re
@@ -18,7 +20,7 @@ class Indent():
         self.level = level
 
     def inc(self):
-        new = copy(self)
+        new = copy.copy(self)
         new.level += 1
         return new
 
@@ -117,10 +119,9 @@ def decompile_ins(ins, indent, inner):
         return ''
         
     else:
-  #     for k in ('src', 'dest'):
-  #         if has_instruction_inside(ins, k):
-  #             ins['ins'][k] = '(' + decompile_ins(ins['ins'][k], indent, True) + ')'
-  #             pass
+        for k in ('src', 'dest'):
+           if has_instruction_inside(ins, k):
+               ins['ins'][k] = '(' + decompile_ins(ins['ins'][k], indent, True) + ')'
         try:
             i, lhs, rhs, extra_lambda = find(lambda t: t[0] == opcode, decompile_table)
             if inner:
@@ -128,7 +129,7 @@ def decompile_ins(ins, indent, inner):
             else:
                 fmt = indent.out() + lhs + rhs
         except LookupError:
-            if 0 and inner:
+            if inner:
                 fmt = '/* {env[ins]} */'
             else:
                 fmt = indent.out() + '// {env[ins]}'
@@ -251,16 +252,15 @@ def computation_collapse(asm):
     def lookup_vars(ins, mem):
         for k in ('src', 'dest'):
             if has_instruction_inside(ins, k):
-                # ins['ins'][k] = lookup_vars(ins['ins'][k], mem) do some inf loop stuff
-                pass
+                ins['ins'][k] = lookup_vars(ins['ins'][k], mem)
             elif has_field(ins, k) and 'repr' in ins['ins'][k] and ins['ins'][k]['repr'] in mem:
                 ins['ins'][k] = mem[ins['ins'][k]['repr']]
             else:
                 continue #doesn't have the k field
         return ins
 
-    for ins in asm[:]:
-        for k in ('src', 'dest'):
+    for ins in copy.deepcopy(asm):
+        for k in ('dest'):#here, in the future will appear a way to distinct writing to src/dest at the same time with different data
             if has_field(ins, k):
                 if is_writable(ins, k) and is_temp_comp(ins, k): 
                     mem[ins['ins'][k]['repr']] = lookup_vars(ins, mem)
@@ -284,7 +284,7 @@ def decompile_function(asm, labels, name):
     pre, post = output_signature(signature, name)
     
     asm = variable_inference(asm)
-    #clp_asm = computation_collapse(asm) ALISTRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    clp_asm = computation_collapse(asm)
     cfg = control_flow_graph(asm, labels, name)
     #cfg = control_flow_graph(clp_asm, labels, name)
 
@@ -298,5 +298,7 @@ def decompile_functions(functions, symbols):
     for name, symbol in symbols.iteritems():
         output += decompile_function(functions[name], labels, name)
         output += '\n'
-
+    
+    output = postprocessor(output) #comment for disable
+    
     return output
