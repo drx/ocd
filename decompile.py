@@ -278,15 +278,15 @@ def postprocessor(output):
     mem = {}
     pr = ""
     for line in copy.deepcopy(output).splitlines(True):
-        m = re.search("\s+(temp_.*?)\s+=\s+(.*?);", line)
+        m = re.search("\s*(temp_.*?)\s*=\s*(.*?);", line)
         if m:
             v = m.group(2)
             for key, val in mem.iteritems():
-                v = v.replace(key, val)
+                v = v.replace(key, "({0})".format(val))
             mem[m.group(1)] = v
         else:
             for key, val in mem.iteritems():
-                line = line.replace(key, val)
+                line = line.replace(key, "({0})".format(val))
 
             pr = pr + line
     return pr
@@ -300,6 +300,6 @@ def decompile_functions(functions, symbols):
         output += decompile_function(functions[name], labels, name)
         output += '\n'
     
-    output = postprocessor(output)
+    output = postprocessor(output) #comment for disable
     
     return output
