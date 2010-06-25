@@ -104,26 +104,29 @@ class OrderedDict(dict, DictMixin):
 
 def repr_x64(ins, r, w):
     def arg(n):
-        return {'value': ins[n+1], 'r': r[n], 'w': w[n]}
+        return {'value': ins[n+1], 'repr': ins[n+1], 'r': r[n], 'w': w[n]}
 
-    def jump_dest(ins):
-        dest = {'type':'const', 'value': ins[1], 'repr': repr, 'r': True, 'w': False}
+    def jump_dest():
+        dest = {'type':'const', 'value': ins[1], 'r': True, 'w': False}
         try:
             dest['repr'] = int(ins[1],16)
         except ValueError:
-            pass
+            dest['repr'] = ins[1]
         return dest
-
 
     if ins[0][0] == 'j':
         cond = ins[0][1:]
         if cond == 'mp':
             cond = 'true'
-        return {'op': 'jump', 'cond': cond, 'dest': jump_dest(ins)}
+        return {'op': 'jump', 'cond': cond, 'dest': jump_dest()}
     elif ins[0] == 'call':
-        return {'op': 'call', 'dest': jump_dest(ins)}
+        return {'op': 'call', 'dest': jump_dest()}
+    elif ins[0] == 'cmp':
+        cmp = {'value': 'cmp', 'repr': 'cmp', 'r': False, 'w': True}
+        src = {'op': 'sub', 'dest': arg(0), 'src': arg(1)}
+        return {'op': 'mov', 'dest': cmp, 'src': src}
     elif ins[0] == 'ret':
-        dest = {'value': 'eax', 'r': True, 'w': False}
+        dest = {'value': 'eax', 'repr': 'eax', 'r': True, 'w': False}
         return {'op': 'return', 'dest': dest}
     elif len(ins) == 1:
         return {'op': ins[0]}
@@ -155,8 +158,8 @@ def disassemble_x64(buf, virt):
         off += length
     return result
 
-"""Intelligent x64 disassembly"""
 def disassemble_x64_int(buf, virt):
+    """Intelligent x64 disassembly"""
     FORMAT="INTEL"
     entries = [virt]
 

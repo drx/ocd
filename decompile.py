@@ -74,14 +74,14 @@ def is_constant(x):
 def decompile_ins_outer(ins, indent):
     return decompile_ins(ins, indent, False)
 
-"""
-Get the representation of an integer.
-
-The representation is chosen based on its Kolmogorov complexity,
- i.e. the repr r is chosen which has the minimal value
- len(zlib.compress(r))
-"""
 def repr_int(i):
+    """
+    Get the representation of an integer.
+    
+    The representation is chosen based on its Kolmogorov complexity,
+     i.e. the repr r is chosen which has the minimal value
+     len(zlib.compress(r))
+    """
     reprs = [('{0}','{0}'), ('{0:x}', '0x{0:x}')]
     lengths = [len(zlib.compress(r[0].format(i))) for r in reprs]
     return reprs[lengths.index(min(lengths))][1].format(i)
@@ -193,17 +193,15 @@ def is_register(x):
     return x in registers
 
 def variable_inference(asm):
-    var_names = new_var_name()
-    temp_names = new_temp_name()
-    vars = {}
-
-    for line, ins in enumerate(asm[:]):
-        for k, arg in ins['ins'].iteritems():
+    def variable_inference_ins(ins):
+        for k, arg in ins.iteritems():
             if k not in ('src', 'dest'):
                 continue
 
-            if arg['value'] in vars:
-                asm[line]['ins'][k].update(vars[arg['value']])
+            if 'op' in arg:
+                variable_inference_ins(arg)
+            elif arg['value'] in vars:
+                ins[k].update(vars[arg['value']])
             else:
                 if arg['w'] or arg['r']:
                     if arg['r'] and is_constant(arg['value']):
@@ -217,9 +215,17 @@ def variable_inference(asm):
                         repr = var_names.next()
                     info = {'type':type, 'repr':repr, 'value': arg['value']}
                     vars[arg['value']] = info
-                    asm[line]['ins'][k].update(info)
+                    ins[k].update(info)
+
+    var_names = new_var_name()
+    temp_names = new_temp_name()
+    vars = {}
+
+    for line, ins in enumerate(asm[:]):
+        variable_inference_ins(ins['ins'])
 
     return asm
+
 
 def has_field(ins, k):
     if type(ins) == dict and 'ins' in ins and k in ins['ins']:
