@@ -1,1 +1,15 @@
-Zhao Hai.
+*ocd* - ocd C decompiler
+
+*Quick introduction*
+ocd is a C decompiler written in Python, currently supporting decompilation of programs compiled for the x64 architecture.
+
+The decompiler performs some inferences as to the program structure (such as control and data flow analysis).
+
+The internal data structures used for instructions are quite universal, so it should be trivial to add additional architectures as they are needed, as well as new output languages.
+
+*Quick start*
+Running *./ocd.py PROGRAM*, e.g. *./ocd.py /usr/bin/yes* will decompile *PROGRAM*. 
+
+There are some tests in /tests, just do *cd tests; make*, then for example run *./ocd.py tests/test_ack*
+
+Run *./ocd.py --help* to get more options.
