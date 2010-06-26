@@ -1,6 +1,6 @@
 from control_flow import control_flow_graph
 from copy import copy
-from decompile_table import conditions, condition_negs, decompile_table
+from representation import conditions, condition_negs, representation
 from itertools import izip, starmap, repeat, count
 from postprocessor import postprocessor
 import copy
@@ -40,7 +40,7 @@ def decompile_vertex((t, v), indent=None):
     if indent is None:
         indent = Indent(1)
     if block_type == 'block':
-        return '\n'.join(starmap(decompile_ins_outer, izip(v, repeat(indent))))
+        return '\n'.join(starmap(decompile_line, izip(v, repeat(indent))))
 
     elif block_type == 'if':
         cond, block = v
@@ -71,9 +71,6 @@ def decompile_vertex((t, v), indent=None):
 def is_constant(x):
     return re.match("-?0x.*", x)
 
-def decompile_ins_outer(ins, indent):
-    return decompile_ins(ins, indent, False)
-
 def repr_int(i):
     """
     Get the representation of an integer.
@@ -86,71 +83,38 @@ def repr_int(i):
     lengths = [len(zlib.compress(r[0].format(i))) for r in reprs]
     return reprs[lengths.index(min(lengths))][1].format(i)
 
-def decompile_ins(ins, indent, inner):
-    opcode = ins['ins']['op']
-    extra_lambda = None
+def decompile_line(line, indent):
+    def decompile_ins(ins):
+        extra_lambda = None
 
-    # would be nice to find a nicer way to do this
-    for k, arg in ins['ins'].iteritems():
-        if k not in ('src', 'dest'):
-            continue
+        repr = {}
+        for k, arg in ins.iteritems():
+            if k not in ('src', 'dest'):
+                continue
+
+            if 'op' in ins[k]:
+                lhs, rhs = decompile_ins(ins[k])
+                repr[k] = '(' + rhs + ')'
+            else:
+                repr[k] = ins[k]['repr']
+
+            if type(repr[k]) == int:
+                repr[k] = repr_int(repr[k])
+
         try:
-            ins['ins'][k] = ins['ins'][k]['repr']
-            if type(ins['ins'][k]) == int:
-                ins['ins'][k] = repr_int(ins['ins'][k])
+            lhs, rhs = representation(ins['op'])
+            return lhs.format(i=repr), rhs.format(i=repr)
         except KeyError:
-            try:
-                ins['ins'][k] = ins['ins'][k]['value']
-            except KeyError:
-                pass
-                #print "<KeyError>"
-                #print ins['ins'][k] #hmm
-        except TypeError:
-            pass
-            #print "<TypeError>"
-            #print ins
+            return '', '/* Unsupported instruction: {ins} */'.format(ins=ins)
 
-    # special instructions
-    if opcode[0] == '!':
-        if opcode == '!label':
-            fmt = '{i[1]}:'
-
-    elif opcode[0] == 'j':
-        return ''
-        
-    else:
-        for k in ('src', 'dest'):
-           if has_instruction_inside(ins, k):
-               ins['ins'][k] = '(' + decompile_ins(ins['ins'][k], indent, True) + ')'
-        try:
-            i, lhs, rhs, extra_lambda = find(lambda t: t[0] == opcode, decompile_table)
-            if inner:
-                fmt = rhs
-            else:
-                fmt = indent.out() + lhs + rhs
-        except LookupError:
-            if inner:
-                fmt = '/* {env[ins]} */'
-            else:
-                fmt = indent.out() + '// {env[ins]}'
-
-    env = {
-        'loc': ins['loc'],
-        'length': ins['length'],
-        'ins': ins['ins'],
-    }
+    lhs, rhs = decompile_ins(line['ins'])
+    line_repr = indent.out() + lhs + rhs + ';'
 
     if debug.check('misc'):
         from binascii import hexlify
-        fmt += '\t\t/* {env[loc]:x}: {env[length]} ({env[bin]}) {env[prefix]} */'
-        env['bin'] = hexlify(ins['debug']['binary'])
-        env['prefix'] = ins['debug']['prefix']
+        line_repr += '\n{indent}{blue}/* {line} */{black}'.format(indent=indent.out(), line=line, blue='\033[94m', black='\033[0m')
 
-    extra = ''
-    if extra_lambda:
-        extra = extra_lambda(env)
-
-    return fmt.format(i=ins['ins'], extra=extra, env=env)
+    return line_repr
 
 def get_labels(functions):
     labels = {}
@@ -228,16 +192,10 @@ def variable_inference(asm):
 
 
 def has_field(ins, k):
-    if type(ins) == dict and 'ins' in ins and k in ins['ins']:
-        return True
-    else:
-        return False
+    return type(ins) == dict and 'ins' in ins and k in ins['ins']
 
 def has_instruction_inside(ins, k):
-    if has_field(ins, k) and type(ins['ins'][k]) == dict and 'ins' in ins['ins'][k]:
-        return True
-    else:
-        return False
+    return has_field(ins, k) and 'op' in ins['ins'][k]
 
 def is_writable(ins, k):
     if has_field(ins, k) and type(ins['ins'][k]) == dict and 'w' in ins['ins'][k] and ins['ins'][k]['w']:
