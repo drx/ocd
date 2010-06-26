@@ -75,6 +75,9 @@ class Graph:
         self._pred[v_out].remove(v_in)
         del self._edge_values[(v_in, v_out)]
 
+    def itervertices(self):
+        return sorted(self.vertices().iteritems(), lambda ((a,b),c), ((d,e),f): cmp(b,e))
+
     def export(self, f, name, random=False):
         def block_label(block_type, block_loc, block):
             if block_type == 'block':

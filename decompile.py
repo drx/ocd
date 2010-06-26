@@ -27,7 +27,7 @@ def condition(cond, var='cmp'):
     return conditions[cond].format(cond=var)
 
 def decompile(cfg):
-    return '\n'.join(map(decompile_vertex, sorted(cfg.vertices().iteritems(), lambda ((a,b),c), ((d,e),f): cmp(b,e))))
+    return '\n'.join(map(decompile_vertex, cfg.itervertices()))
 
 def decompile_vertex((t, v), indent=None):
     block_type, block_start = t
@@ -200,49 +200,59 @@ def variable_inference(asm):
     return asm
 
 
-def has_field(ins, k):
-    return type(ins) == dict and 'ins' in ins and k in ins['ins']
 
-def has_instruction_inside(ins, k):
-    return has_field(ins, k) and 'op' in ins['ins'][k]
+def computation_collapse(cfg):
+    def is_writable(ins, k):
+        return k in ins and 'w' in ins[k] and ins[k]['w']
 
-def is_writable(ins, k):
-    if has_field(ins, k) and type(ins['ins'][k]) == dict and 'w' in ins['ins'][k] and ins['ins'][k]['w']:
-        return True
-    else:
-        return False
-
-def is_temp_comp(ins, k):
-    if has_field(ins, k) and type(ins['ins'][k]) == dict and ins['ins'][k]['type'] == 'temp':
-        return True
-    else:
-        return False
-
-def computation_collapse(asm):
-    mem = {}
-    code = []
+    def is_temp_comp(ins, k):
+        return k in ins and 'type' in ins[k] and ins[k]['type'] == 'temp'
 
     def lookup_vars(ins, mem):
-        for k in ('src', 'dest'):
-            if has_instruction_inside(ins, k):
-                ins['ins'][k] = lookup_vars(ins['ins'][k], mem)
-            elif has_field(ins, k) and 'repr' in ins['ins'][k] and ins['ins'][k]['repr'] in mem:
-                ins['ins'][k] = mem[ins['ins'][k]['repr']]
-            else:
-                continue #doesn't have the k field
+        for k in ('src','dest'):
+            if k in ins and 'op' in ins[k]:
+                ins[k] = lookup_vars(ins[k], mem)
+            elif k != 'dest' and k in ins and 'repr' in ins[k] and ins[k]['repr'] in mem:
+                ins[k] = mem[ins[k]['repr']]
         return ins
 
-    for ins in copy.deepcopy(asm):
-        for k in ('dest'):#here, in the future will appear a way to distinct writing to src/dest at the same time with different data
-            if has_field(ins, k):
-                if is_writable(ins, k) and is_temp_comp(ins, k): 
-                    mem[ins['ins'][k]['repr']] = lookup_vars(ins, mem)
-                else:
-                    code.append(lookup_vars(ins, mem))
-            else: #no dest field
-                code.append(lookup_vars(ins, mem))
+    def collapse_line(line, mem):
+        ins = line['ins']
+        for k in ('dest',):
+            if k in ins and is_writable(ins, k) and is_temp_comp(ins, k):
+                key = ins[k]['repr']
+                mem[key] = lookup_vars(copy.deepcopy(ins), mem)
+                line['ins'] = {'op': 'nop'}
+            else:
+                line['ins'] = lookup_vars(ins, mem)
+        
+    def collapse_vertex((t, v), mem):
+        v_type, v_start = t
 
-    return code
+        if v_type == 'block':
+            for line in v:
+                collapse_line(line, mem)
+
+        elif v_type == 'cons':
+            for block in v:
+                collapse_vertex(block, mem)
+
+        elif v_type == 'if':
+            cond, block = v
+            collapse_vertex(block, copy.deepcopy(mem))
+
+        elif v_type == 'ifelse':
+            cond, true, false = v
+            for block in (true, false):
+                collapse_vertex(block, copy.deepcopy(mem))
+        
+        elif v_type == 'while':
+            cond, pre, loop = v
+            for block in (pre, loop):
+                collapse_vertex(block, copy.deepcopy(mem))
+
+    for v in cfg.itervertices():
+        collapse_vertex(v, {})
 
 def new_var_name():
     for n in count(0):
@@ -257,8 +267,8 @@ def decompile_function(asm, labels, name):
     pre, post = output_signature(signature, name)
     
     asm = variable_inference(asm)
-    clp_asm = computation_collapse(asm)
     cfg = control_flow_graph(asm, labels, name)
+    computation_collapse(cfg)
     #cfg = control_flow_graph(clp_asm, labels, name)
 
     return pre + decompile(cfg) + post
