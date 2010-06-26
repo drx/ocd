@@ -9,12 +9,6 @@ import libdisassemble.opcode86 as opcode86
 import re
 import zlib
 
-def find(f, seq):
-    for item in seq:
-        if f(item):
-            return item
-    raise LookupError
-
 class Indent():
     def __init__(self, level=0):
         self.level = level
@@ -71,7 +65,7 @@ def decompile_vertex((t, v), indent=None):
 def is_constant(x):
     return re.match("-?0x.*", x)
 
-def repr_int(i):
+def repr_int(n):
     """
     Get the representation of an integer.
     
@@ -80,13 +74,26 @@ def repr_int(i):
      len(zlib.compress(r))
     """
     reprs = [('{0}','{0}'), ('{0:x}', '0x{0:x}')]
-    lengths = [len(zlib.compress(r[0].format(i))) for r in reprs]
-    return reprs[lengths.index(min(lengths))][1].format(i)
+    lengths = [len(zlib.compress(r[0].format(n))) for r in reprs]
+    return reprs[lengths.index(min(lengths))][1].format(n)
 
 def decompile_line(line, indent):
-    def decompile_ins(ins):
-        extra_lambda = None
+    '''
+    Decompile a line of code. A line contains an instruction and
+     some metainformation about that instruction (its location,
+     etc.)
 
+    The pseudo-EBNF of lines is as follows:
+
+     line = location, debug, instruction
+     instruction = op, argument*
+     argument = value, repr | instruction
+    '''
+    def decompile_ins(ins):
+        '''
+        Decompile an instruction. Instructions are trees, see
+         the EBNF for decompile_line.
+        '''
         repr = {}
         for k, arg in ins.iteritems():
             if k not in ('src', 'dest'):
