@@ -58,7 +58,6 @@ def disassemble_x64(buf, virt):
                 ins, r, w = p.getOpcode(FORMAT)
             except ValueError:
                 break
-            print ins, r, w
             ins = repr_x64(ins, r, w)
             debug = {
                 'prefix': pre,
