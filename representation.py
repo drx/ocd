@@ -12,6 +12,7 @@ repr_table_c = {
 'mov': ('{i[dest]} = ', '{i[src]}'),
 #'pop', '
 #'push', '
+'jump': ('', ''),
 'nop': ('', ''),
 'return': ('return {i[dest]}', ''),
 'sub': ('{i[dest]} = ', '{i[dest]} - {i[src]}'),

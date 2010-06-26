@@ -38,18 +38,18 @@ def decompile_vertex((t, v), indent=None):
 
     elif block_type == 'if':
         cond, block = v
-        return '{indent}if ({cond})\n{indent}{{\n{block}\n{indent}}}\n'.format(
+        return '\n{indent}if ({cond})\n{indent}{{\n{block}\n{indent}}}\n'.format(
             cond=condition(cond), block=decompile_vertex(block, indent.inc()), indent=indent.out())
 
     elif block_type == 'ifelse':
         cond, true, false = v
-        return '{indent}if ({cond})\n{indent}{{\n{true}\n{indent}}}\n{indent}else\n{indent}{{\n{false}\n{indent}}}\n'.format(
+        return '\n{indent}if ({cond})\n{indent}{{\n{true}\n{indent}}}\n{indent}else\n{indent}{{\n{false}\n{indent}}}\n'.format(
             cond=condition(cond), true=decompile_vertex(true, indent.inc()), false=decompile_vertex(false, indent.inc()),
             indent=indent.out())
 
     elif block_type == 'while':
         cond, pre, loop = v
-        return '{indent}while ({cond})\n{indent}{{\n{loop}\n{pre}\n{indent}}}\n'.format(
+        return '\n{indent}while ({cond})\n{indent}{{\n{loop}\n{pre}\n{indent}}}\n'.format(
             indent=indent.out(), cond=condition(cond),
             pre=decompile_vertex(pre, indent.inc()), loop=decompile_vertex(loop, indent.inc())
         )
@@ -115,7 +115,9 @@ def decompile_line(line, indent):
             return '', '/* Unsupported instruction: {ins} */'.format(ins=ins)
 
     lhs, rhs = decompile_ins(line['ins'])
-    line_repr = indent.out() + lhs + rhs + ';'
+    line_repr = indent.out() + lhs + rhs
+    if lhs+rhs != '':
+        line_repr += ';'
 
     if debug.check('misc'):
         from binascii import hexlify
