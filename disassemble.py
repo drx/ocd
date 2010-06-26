@@ -61,7 +61,7 @@ def disassemble_x64(buf, virt):
                 break
             ins = repr_x64(ins, r, w)
 
-            if debug.check('asm_lines'):
+            if debug.check('asm_rw'):
                 print ins, r, w
 
             debug_dis = {
