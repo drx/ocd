@@ -1,4 +1,5 @@
 from libdisassemble.disassemble import *
+import debug
 
 def repr_x64(ins, r, w):
     def arg(n):
@@ -59,11 +60,15 @@ def disassemble_x64(buf, virt):
             except ValueError:
                 break
             ins = repr_x64(ins, r, w)
-            debug = {
+
+            if debug.check('asm_rw'):
+                print ins, r, w
+
+            debug_dis = {
                 'prefix': pre,
                 'binary': buf[off:off+length]
             }
-            result[addr] = {'ins': ins, 'loc': addr, 'length': length, 'debug': debug}
+            result[addr] = {'ins': ins, 'loc': addr, 'length': length, 'debug': debug_dis}
             if ins['op'] == 'return':
                 break
 #            if ins['op'] == 'call':

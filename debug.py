@@ -4,7 +4,7 @@ Debug module
 Acceptable debug levels: all, graph, misc
 '''
 
-options = ['all', 'graph', 'misc']
+options = ['all', 'graph', 'misc', 'asm_rw']
 
 __debug = []
 
