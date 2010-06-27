@@ -1,4 +1,4 @@
-#### *ocd* - ocd C decompiler
+*ocd* - ocd C decompiler
 
 *Quick introduction*
 ocd is a C decompiler written in Python, currently supporting decompilation of programs compiled for the x64 architecture.
