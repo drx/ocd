@@ -68,7 +68,7 @@ def disassemble_x64(buf, virt):
                 'prefix': pre,
                 'binary': buf[off:off+length]
             }
-            result[addr] = {'ins': ins, 'loc': addr, 'length': length, 'debug': debug_dis}
+            result[addr] = {'ins': ins, 'loc': addr, 'length': length, 'debug': debug_dis, 'display': True}
             if ins['op'] == 'return':
                 break
 #            if ins['op'] == 'call':

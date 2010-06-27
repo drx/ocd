@@ -78,6 +78,26 @@ class Graph:
     def itervertices(self):
         return sorted(self.vertices().iteritems(), lambda ((a,b),c), ((d,e),f): cmp(b,e))
 
+    def iterblocks(self):
+        def traverse(b):
+            if type(b) is not tuple:
+                return
+
+            t, v = b
+            v_type, v_start = t
+            
+            if v_type == 'block':
+                yield v
+
+            else:
+                for block in v:
+                    for y in traverse(block):
+                        yield y                    
+
+        for v in self.itervertices():
+            for y in traverse(v):
+                yield y
+
     def export(self, f, name, random=False):
         def block_label(block_type, block_loc, block):
             if block_type == 'block':

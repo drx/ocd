@@ -5,6 +5,7 @@ from itertools import izip, starmap, repeat, count
 from postprocessor import postprocessor
 import copy
 import debug
+import function_calls
 import libdisassemble.opcode86 as opcode86
 import re
 import zlib
@@ -108,16 +109,31 @@ def decompile_line(line, indent):
             if type(repr[k]) == int:
                 repr[k] = repr_int(repr[k])
 
-        try:
-            lhs, rhs = representation(ins['op'])
-            return lhs.format(i=repr), rhs.format(i=repr)
-        except KeyError:
-            return '', '/* Unsupported instruction: {ins} */'.format(ins=ins)
+        if ins['op'] == 'apply':
+            lhs = ''
+            args = []
+            for arg in ins['args']:
+                if 'op' in arg:
+                    lhs, rhs = decompile_ins(arg)
+                    args.append(rhs)
+                else:
+                    args.append(arg['repr'])
+            rhs = '{fun}({args})'.format(fun=ins['function'], args=', '.join(args))
+
+        else:
+            try:
+                lhs, rhs = representation(ins['op'])
+            except KeyError:
+                return '', '/* Unsupported instruction: {ins} */'.format(ins=ins)
+        return lhs.format(i=repr), rhs.format(i=repr)
 
     lhs, rhs = decompile_ins(line['ins'])
     line_repr = indent.out() + lhs + rhs
     if lhs+rhs != '':
         line_repr += ';'
+
+    if not line['display']:
+        line_repr = ''
 
     if debug.check('misc'):
         from binascii import hexlify
@@ -214,6 +230,9 @@ def computation_collapse(cfg):
                 ins[k] = lookup_vars(ins[k], mem)
             elif k != 'dest' and k in ins and 'repr' in ins[k] and ins[k]['repr'] in mem:
                 ins[k] = mem[ins[k]['repr']]
+        if 'op' in ins and ins['op'] == 'apply':
+            for i, arg in enumerate(ins['args']):
+                ins['args'][i] = lookup_vars({'src': arg}, mem)['src']
         return ins
 
     def collapse_line(line, mem):
@@ -222,7 +241,7 @@ def computation_collapse(cfg):
             if k in ins and is_writable(ins, k) and is_temp_comp(ins, k):
                 key = ins[k]['repr']
                 mem[key] = lookup_vars(copy.deepcopy(ins), mem)
-                line['ins'] = {'op': 'nop'}
+                line['display'] = False
             else:
                 line['ins'] = lookup_vars(ins, mem)
         
@@ -262,12 +281,16 @@ def new_temp_name():
     for n in count(0):
         yield "temp_{0}".format(n)
 
-def decompile_function(asm, labels, name):
+def decompile_function(asm, labels, name, symbols):
     signature = infer_signature(asm)
     pre, post = output_signature(signature, name)
     
     asm = variable_inference(asm)
     cfg = control_flow_graph(asm, labels, name)
+
+    symbols_rev = dict([(symbols[s]['start'], s) for s in symbols])
+    function_calls.fold(cfg, symbols_rev)
+
     computation_collapse(cfg)
     #cfg = control_flow_graph(clp_asm, labels, name)
 
@@ -279,9 +302,9 @@ def decompile_functions(functions, symbols):
 
     output = ''
     for name, symbol in symbols.iteritems():
-        output += decompile_function(functions[name], labels, name)
+        output += decompile_function(functions[name], labels, name, symbols)
         output += '\n'
     
     #output = postprocessor(output) #comment for disable
     
-    return output
+    return '\n'.join([line for line in output.split('\n') if line.strip()])
