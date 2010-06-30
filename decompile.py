@@ -165,18 +165,6 @@ def output_signature(signature, name):
     post = '\n}'
     return pre, post
 
-def labelize_functions(functions, labels):
-    for name, function in functions.iteritems():
-        f = []
-        for ins in function:
-#            if ins['loc'] in labels:
-#                f.append({'prefix': '', 'bin': '', 'loc': ins['loc'], 'length': 0, 'ins': ['!label', labels[ins['loc']]]})
-            f.append(ins)
-                
-        functions[name] = f
-
-    return functions        
-
 def is_register(x):
     registers = map(lambda (x,y,z): x, opcode86.regs)
     return x in registers
@@ -298,7 +286,6 @@ def decompile_function(asm, labels, name, symbols):
 
 def decompile_functions(functions, symbols):
     labels = get_labels(functions)
-    rfunctions = labelize_functions(functions, labels)
 
     output = ''
     for name, symbol in symbols.iteritems():
