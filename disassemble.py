@@ -30,7 +30,7 @@ def repr_x64(ins, r, w):
         return {'op': 'mov', 'dest': cmp, 'src': src}
     elif ins[0] == 'ret':
         dest = {'value': 'eax', 'repr': 'eax', 'r': True, 'w': False}
-        return {'op': 'return', 'dest': dest}
+        return {'op': 'return', 'src': dest}
     elif len(ins) == 1:
         return {'op': ins[0]}
     elif len(ins) == 2:

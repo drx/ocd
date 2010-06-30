@@ -14,7 +14,7 @@ repr_table_c = {
 #'push', '
 'jump': ('', ''),
 'nop': ('', ''),
-'return': ('return {i[dest]}', ''),
+'return': ('return {i[src]}', ''),
 'sub': ('{i[dest]} = ', '{i[dest]} - {i[src]}'),
 'xor': ('{i[dest]} = ', '{i[dest]} ^ {i[src]}'),
 }
