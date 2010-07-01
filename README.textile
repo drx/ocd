@@ -8,8 +8,10 @@ The decompiler performs some inferences as to the program structure (such as con
 The internal data structures used for instructions are quite universal, so it should be trivial to add additional architectures as they are needed, as well as new output languages.
 
 *Quick start*
-Running *./ocd.py PROGRAM*, e.g. *./ocd.py /usr/bin/yes* will decompile *PROGRAM*. 
+Running *./ocd PROGRAM*, e.g. *./ocd /usr/bin/yes* will decompile *PROGRAM*. 
 
-There are some tests in /tests, just do *cd tests; make*, then for example run *./ocd.py tests/test_ack*
+There are some tests in /tests, just do *cd tests; make*, then for example run *./ocd tests/test_ack*
 
-Run *./ocd.py --help* to get more options.
+Run *./ocd --help* to get more options.
+
+See doc/ocd.pdf for a more detailed documentation.
