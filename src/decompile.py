@@ -277,7 +277,7 @@ def decompile_function(asm, labels, name, symbols):
     
     cfg = control_flow_graph(asm, labels, name)
 
-    symbols_rev = dict([(symbols[s]['start'], s) for s in symbols])
+    symbols_rev = {symbols[s]['start']: s for s in symbols}
     function_calls.fold(cfg, symbols_rev)
 
     variable_inference(cfg)
