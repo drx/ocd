@@ -127,7 +127,7 @@ class Graph:
         for e_type, e_loc in entries:
             f.write("\t\t{0}_entry -> {0}_{1}_{2:x};\n".format(name, e_type, e_loc))
 
-        for (block_type, block_loc), block in self.vertices().iteritems():
+        for (block_type, block_loc), block in self.vertices().items():
             f.write("\t\t{0}_{1}_{2:x} [label=\"{3}\"];\n".format(name, block_type, block_loc, block_label(block_type, block_loc, block)))
             for v_type, v_out in self.successors((block_type, block_loc)):
                 label = ''
@@ -264,7 +264,7 @@ def graph_transform(graph):
                         continue
                     s_s, t_s = map(graph.successors, succs)
                     s_p, t_p = map(graph.predecessors, succs)
-                    if map(len, [s_s, t_s, s_p, t_p]) == [1]*4 and s_s == t_s:
+                    if [len(x) for x in (s_s, t_s, s_p, t_p)] == [1]*4 and s_s == t_s:
                         s_type, s_start = s
                         v_new = ('ifelse', s_start)
                         condition = graph.edge(v,s)
@@ -305,6 +305,7 @@ def graph_transform(graph):
 
     rules = [t_trivial, t_ifelse, t_if, t_while, t_cons]
 
+    print(list(map(flip(graph), rules)))
     i = dropwhile(lambda x: not x[0], map(flip(graph), rules))
     try:
         true, graph = i.__next__()
