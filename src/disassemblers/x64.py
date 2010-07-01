@@ -90,7 +90,7 @@ def disassemble(buf, virt):
                 ins, r, w = p.getOpcode(FORMAT)
             except ValueError:
                 break
-            ins = repr_x64(ins, r, w)
+            ins = repr_ins(ins, r, w)
 
             if debug.check('asm_rw'):
                 print(ins, r, w)
