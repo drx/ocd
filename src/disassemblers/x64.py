@@ -11,6 +11,14 @@ def repr_ins(ins, r, w):
         '''
         return {'value': ins[n+1], 'repr': ins[n+1], 'r': r[n], 'w': w[n]}
 
+    def translate(op):
+        '''
+        Some instructions are easy to translate, but have weird names,
+         for example imul -> mul.
+        '''
+        ins[0] = op
+        return repr_ins(ins, r, w)
+
     def jump_dest():
         '''
         Calculate a jump operand.
@@ -52,6 +60,8 @@ def repr_ins(ins, r, w):
         return {'op': 'mov', 'dest': arg(0), 'src': src}
     elif ins[0] == 'push':
         return nop
+    elif ins[0] == 'imul':
+        return translate('mul')
     elif ins[0] == 'cmp':
         cmp = {'value': 'cmp', 'repr': 'cmp', 'r': False, 'w': True}
         src = {'op': 'sub', 'dest': arg(0), 'src': arg(1)}
