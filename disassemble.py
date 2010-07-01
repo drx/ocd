@@ -1,6 +1,8 @@
 from libdisassemble.disassemble import *
 import debug
 
+
+
 def repr_x64(ins, r, w):
     def arg(n):
         return {'value': ins[n+1], 'repr': ins[n+1], 'r': r[n], 'w': w[n]}
@@ -12,6 +14,17 @@ def repr_x64(ins, r, w):
         except ValueError:
             dest['repr'] = ins[1]
         return dest
+
+    def parse_addr(addr, r=True, w=False):
+        addr = addr.strip().strip('[]')
+
+        for op, repr in [('sub', '-'), ('add', '+'), ('mul', '*')]:
+            parts = addr.partition(repr)
+            if parts[1]:
+                return {'op': op, 'dest': parse_addr(parts[0], r, w), 'src': parse_addr(parts[2], r, w)}
+       
+        return {'value': addr, 'repr': addr, 'r': r, 'w': w}
+         
 
     nop = {'op': 'nop'}
 
@@ -25,7 +38,8 @@ def repr_x64(ins, r, w):
     elif ins[0] == 'leave':
         return nop
     elif ins[0] == 'lea':
-        return nop
+        src = parse_addr(ins[2])
+        return {'op': 'mov', 'dest': arg(0), 'src': src}
     elif ins[0] == 'push':
         return nop
     elif ins[0] == 'cmp':
