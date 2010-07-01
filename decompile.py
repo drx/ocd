@@ -279,9 +279,40 @@ def cremate(cfg):
      and remove the unnecessary ones.
     """
 
-    reads = {}
+    def get_read_arg(arg):
+        if 'op' in arg:
+            return get_read(arg)
+        if arg['r'] and arg['type'] == 'temp':
+            return {arg['repr']}
+
+        return set()
+
+    def get_read(ins):
+        r = set()
+        if 'src' in ins:
+            r |= get_read_arg(ins['src'])
+        return r
+
+    def get_written(ins):
+        w = set()
+        if 'dest' in ins and ins['dest']['w'] and ins['dest']['type'] == 'temp':
+            w |= {ins['dest']['repr']}
+        return w
+
+    reads = set()
     for block, depth in reversed(list(cfg.iterblocks())):
-        print (depth)
+        for line in reversed(block):
+             
+            w = get_written(line['ins'])
+            r = get_read(line['ins'])
+            if w <= reads:
+                pass
+            else:
+                line['display'] = False
+            reads -= w
+            reads |= r
+
+    print(reads)
         
 
 def new_var_name():
@@ -303,7 +334,7 @@ def decompile_function(asm, labels, name, symbols):
 
     variable_inference(cfg)
     computation_collapse(cfg)
-    #cremate(cfg)
+    cremate(cfg)
 
     return pre + decompile(cfg) + post
 
