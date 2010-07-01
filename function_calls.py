@@ -6,7 +6,7 @@ legal_sse = ['xmm0', 'xmm1', 'xmm2', 'xmm3', 'xmm4', 'xmm5', 'xmm6', 'xmm7']
 legal_other = ['rax']
 
 def reg_normalize(reg):
-    idx = map(lambda (x,y,z): x, regs).index(reg)
+    idx = list(map(lambda x: x[0], regs)).index(reg)
     return regs[idx&0xF][0]
 
 class Params:
@@ -45,17 +45,21 @@ class Params:
             return False
 
 def fold(cfg, symbols):
-    for block in cfg.iterblocks():
+    for block, depth in cfg.iterblocks():
         inside_call = False
         for n, line in enumerate(reversed(block)):
             if inside_call:
+                if 'dest' not in line['ins']:
+                    continue
                 dest = line['ins']['dest']
                 param = dest['value']
                 if call_params.add(param, dest):
                     pass
                 else:
                     apply_ins = {'op': 'apply', 'function': function_name, 'args': call_params.args}
-                    block[len(block)-call_n-1]['ins'] = apply_ins
+                    eax = {'value': 'eax', 'repr': 'eax', 'r': False, 'w': True}
+                    mov_ins = {'op': 'mov', 'src': apply_ins, 'dest': eax}
+                    block[len(block)-call_n-1]['ins'] = mov_ins
                     inside_call = False
                     call_params = None
             if line['ins']['op'] == 'call':

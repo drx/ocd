@@ -13,7 +13,9 @@ def objdump(filename):
 
     p1 = Popen(["objdump", "-t", filename], stdout=PIPE)
     p2 = Popen(["awk", "-f", "symbols.awk"], stdin=p1.stdout, stdout=PIPE)
-    symbols_p = p2.communicate()[0].split('\n')
+    #symbols_p_raw = p2.communicate()[0]
+    #print(type(symbols_p_raw))
+    symbols_p = p2.communicate()[0].decode().split('\n')
 
     text = {'start': int(sections_p[0], 16), 'length': int(sections_p[1], 16), 'virt': int(sections_p[2], 16)}
     symbols = {}
@@ -47,7 +49,7 @@ if __name__=="__main__":
 
     filename = args[0]
 
-    f = open(filename)
+    f = open(filename, "rb")
 
     text, symbols = objdump(filename)
 
@@ -59,7 +61,7 @@ if __name__=="__main__":
 
     functions = {}
     if symbols:
-        for name, symbol in symbols.iteritems():
+        for name, symbol in symbols.items():
             f.seek(symbol['start']-text['virt']+text['start'])
             functions[name] = disassemble(f.read(symbol['length']), symbol['start'])
     else:
@@ -67,7 +69,7 @@ if __name__=="__main__":
         functions['start'] = disassemble(f.read(text['length']), text['virt'])
         symbols['start'] = {'start': text['virt'], 'length': text['length']}
 
-    print decompile_functions(functions, symbols)
+    print(decompile_functions(functions, symbols))
 
     if options.graphfile:
         gf.write("}\n")

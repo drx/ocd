@@ -24,6 +24,10 @@ def repr_x64(ins, r, w):
         return {'op': 'call', 'dest': jump_dest()}
     elif ins[0] == 'leave':
         return nop
+    elif ins[0] == 'lea':
+        return nop
+    elif ins[0] == 'push':
+        return nop
     elif ins[0] == 'cmp':
         cmp = {'value': 'cmp', 'repr': 'cmp', 'r': False, 'w': True}
         src = {'op': 'sub', 'dest': arg(0), 'src': arg(1)}
@@ -44,6 +48,7 @@ def repr_x64(ins, r, w):
 
 def disassemble_x64(buf, virt):
     """x64 disassembly"""
+
     FORMAT="INTEL"
     entries = [virt]
 
@@ -62,7 +67,7 @@ def disassemble_x64(buf, virt):
             ins = repr_x64(ins, r, w)
 
             if debug.check('asm_rw'):
-                print ins, r, w
+                print(ins, r, w)
 
             debug_dis = {
                 'prefix': pre,

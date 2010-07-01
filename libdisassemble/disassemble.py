@@ -36,16 +36,16 @@
 # This code largely copyright Immunity, Inc (2004), parts
 # copyright mammon and used under the LGPL by permission
 
-import opcode86 
+import libdisassemble.opcode86 as opcode86
 import struct
 from sys import *
 
 table86=opcode86.tables86
-OP_PERM_MASK =  0x0000007L  
-OP_TYPE_MASK =  0x0000F00L  
-OP_MOD_MASK  =  0x00FF000L  
-OP_SEG_MASK  =  0x00F0000L  
-OP_SIZE_MASK = 0x0F000000L  
+OP_PERM_MASK =  0x0000007  
+OP_TYPE_MASK =  0x0000F00  
+OP_MOD_MASK  =  0x00FF000  
+OP_SEG_MASK  =  0x00F0000  
+OP_SIZE_MASK = 0x0F000000  
 
 
 class Mode:
@@ -102,9 +102,9 @@ class Address(Mode):
         #print "'%s' %d %x, %s"%(data, length, type, relative)
         fmt = "<"
         if self.signed:
-            fmt += ("b", "h", "l")[length/2]
+            fmt += ("b", "h", "l")[length//2]
         else:
-            fmt += ("B", "H", "L")[length/2]
+            fmt += ("B", "H", "L")[length//2]
         
         if (self.getAddrMeth() ==  opcode86.ADDRMETH_A):
             fmt += "H"
@@ -266,7 +266,7 @@ class Opcode:
         """
         try:    ## Crash Gracefully with a "invalid" opcode
             self.addr_size = 4
-            ndx = ord(self.data[off]) 
+            ndx = self.data[off]
             
             ### This next line slices and dices the opcode to make it fit correctly into the current lookup table.
             #
@@ -284,7 +284,7 @@ class Opcode:
             
             if ptr[1] == opcode86.INSTR_PREFIX or (ptr[1] & opcode86.INSTR_PREFIX64 and self.mode == 64):
                 # You can have more than one prefix (!?)
-                if ptr[0] != 0 and len(self.data) > off and self.data[off+1] == '\x0F':
+                if ptr[0] != 0 and len(self.data) > off and self.data[off+1] == 0x0F:
                     self.parse(table86[ptr[0]],  off+2)         # eg. 660Fxx, F20Fxx, F30Fxx, etc...
                 else:
                     self.prefix.append( Prefix(ndx, ptr) )
@@ -414,6 +414,7 @@ class Opcode:
                             regoff += 8
                         ret = (0, Register(ptr[5+a]+regoff, tmp))
                     elif tmp & opcode86.OP_IMM:
+                        print("a")
                         ret = (0, Address("%c"%ptr[5+a], 1, signed=0))
                     else:
                         ret= (0, None)
@@ -433,12 +434,12 @@ class Opcode:
     
             self.off += bytes
             #self.data = self.data[:self.off]
-        except:
+        except IndexError:
             output = ""
             for i in range(len(self.data)):
-                output += "%02x"%ord(self.data[i])
+                output += "%02x"%self.data[i]
 
-            print >>stderr,("Error Parsing Opcode - Data: %s\t Offset: 0x%x"%(output,self.off))
+            print (("Error Parsing Opcode - Data: %s\t Offset: 0x%x"%(output,self.off)), file=stderr)
             
             x,y,z = exc_info()
             excepthook(x,y,z)
@@ -501,7 +502,7 @@ class Opcode:
 
     def get_sib(self, data, mod):
         count = 1
-        sib     = ord(data[0])
+        sib     = data[0]
         s=None
         #print "SIB: %s" %  hex(ord(data[0]))
         
@@ -537,7 +538,7 @@ class Opcode:
         returns a tuple:  (bytecount, Object)
         * bytecount is the number of bytes to advance through data
         """
-        modrm=  ord(data[0])
+        modrm=  data[0]
         count = 1
         mod  = (modrm >> 6) & 0x3   #  XX
         reg  = (modrm >> 3) & 0x7   #    XXX
@@ -580,7 +581,7 @@ class Opcode:
                     disp_base = 1
                     base=Register(rm+reg_type+rmoff, type_flag)
                 #print ">BASE: %s" % base.printOpcode()
-                if mod == 01:
+                if mod == 1:
                     disp= Address(data[disp_base:], 1, type_flag)
                     count+=1
                 else:
@@ -718,10 +719,10 @@ if __name__=="__main__":
     # To get this information, just
     import sys
     if len(sys.argv) != 4:
-        print "usage: %s <file> <offset> <size>" % sys.argv[0]
-        print "\t file:\t file to disassemble"
-        print "\t offset:\t offset to beggining of code(hexa)"
-        print "\t size:\t amount of bytes to dissasemble (hexa)\n"
+        print ("usage: {} <file> <offset> <size>".format(sys.argv[0]))
+        print ("\t file:\t file to disassemble")
+        print ("\t offset:\t offset to beggining of code(hexa)")
+        print ("\t size:\t amount of bytes to dissasemble (hexa)\n")
 
 
         sys.exit(0)
@@ -731,12 +732,12 @@ if __name__=="__main__":
     buf=f.read(int(sys.argv[3], 16) )
     off=0
     FORMAT="AT&T"
-    print "Disassembling file %s at offset: 0x%x" % (sys.argv[1], offset)
+    print("Disassembling file %s at offset: 0x%x" % (sys.argv[1], offset))
     while 1:
         try:
                         p=Opcode(buf[off:])
                                                                                 
-                        print " %08X:   %s" % (off+offset, p.printOpcode(FORMAT))
+                        print(" %08X:   %s" % (off+offset, p.printOpcode(FORMAT)))
                         off+=p.getSize()
-        except:
+        except ValueError:
              break

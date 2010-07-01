@@ -13,7 +13,8 @@ class Graph:
     def __str__(self):
         return 'Graph(vertices=' + str(self._vertices) + ', pred=' + str(self._pred) + ', succ=' + str(self._succ) + ')'
 
-    def __contains__(self, (v, t)):
+    def __contains__(self, vertex):
+        v, t = vertex
         if t == 'in':
             return (v in self._pred)
         if t == 'out':
@@ -76,10 +77,19 @@ class Graph:
         del self._edge_values[(v_in, v_out)]
 
     def itervertices(self):
-        return sorted(self.vertices().iteritems(), lambda ((a,b),c), ((d,e),f): cmp(b,e))
+        def key_f(arg):
+            arg_v, arg_t = arg
+            a, b = arg_v
+            return b
+        return sorted(self.vertices().items(), key=key_f)
 
     def iterblocks(self):
-        def traverse(b):
+        """
+        Inorder traversal of graph blocks.
+
+        Yields block and its depth.
+        """
+        def traverse(b, depth):
             if type(b) is not tuple:
                 return
 
@@ -87,15 +97,15 @@ class Graph:
             v_type, v_start = t
             
             if v_type == 'block':
-                yield v
+                yield v, depth
 
             else:
                 for block in v:
-                    for y in traverse(block):
+                    for y in traverse(block, depth+1):
                         yield y                    
 
         for v in self.itervertices():
-            for y in traverse(v):
+            for y in traverse(v, 1):
                 yield y
 
     def export(self, f, name, random=False):
@@ -233,7 +243,7 @@ def graph_transform(graph):
                         if s1_succ == s2:
                             s1_type, s1_start = s1
                             v_new = ('if', s1_start)
-                            snd = lambda (x,y): y
+                            snd = lambda x,y: y
                             condition = '!'+graph.edge(v, s2)
                             v_new_value = (condition, (s1, graph.vertex(s1)))
                             graph.set_vertex(v_new, v_new_value)
@@ -295,9 +305,9 @@ def graph_transform(graph):
 
     rules = [t_trivial, t_ifelse, t_if, t_while, t_cons]
 
-    i = dropwhile(lambda (x, y): not x, map(flip(graph), rules))
+    i = dropwhile(lambda x: not x[0], map(flip(graph), rules))
     try:
-        true, graph = i.next()
+        true, graph = i.__next__()
         if graphfile:
             graph.export(graphfile, 'step', random=True)
         return graph_transform(graph)

@@ -1,7 +1,7 @@
 from control_flow import control_flow_graph
 from copy import copy
 from representation import conditions, condition_negs, representation
-from itertools import izip, starmap, repeat, count
+from itertools import starmap, repeat, count
 from postprocessor import postprocessor
 import copy
 import debug
@@ -30,12 +30,13 @@ def condition(cond, var='cmp'):
 def decompile(cfg):
     return '\n'.join(map(decompile_vertex, cfg.itervertices()))
 
-def decompile_vertex((t, v), indent=None):
+def decompile_vertex(vertex, indent=None):
+    t, v = vertex
     block_type, block_start = t
     if indent is None:
         indent = Indent(1)
     if block_type == 'block':
-        return '\n'.join(starmap(decompile_line, izip(v, repeat(indent))))
+        return '\n'.join(starmap(decompile_line, zip(v, repeat(indent))))
 
     elif block_type == 'if':
         cond, block = v
@@ -75,7 +76,7 @@ def repr_int(n):
      len(zlib.compress(r))
     """
     reprs = [('{0}','{0}'), ('{0:x}', '0x{0:x}')]
-    lengths = [len(zlib.compress(r[0].format(n))) for r in reprs]
+    lengths = [len(zlib.compress(r[0].format(n).encode())) for r in reprs]
     return reprs[lengths.index(min(lengths))][1].format(n)
 
 def decompile_line(line, indent):
@@ -96,7 +97,7 @@ def decompile_line(line, indent):
          the EBNF for decompile_line.
         '''
         repr = {}
-        for k, arg in ins.iteritems():
+        for k, arg in ins.items():
             if k not in ('src', 'dest'):
                 continue
 
@@ -166,43 +167,48 @@ def output_signature(signature, name):
     return pre, post
 
 def is_register(x):
-    registers = map(lambda (x,y,z): x, opcode86.regs)
+    registers = map(lambda x: x[0], opcode86.regs)
     return x in registers
 
-def variable_inference(asm):
+def variable_inference(cfg):
+    def variable_inference_arg(arg):
+        if 'op' in arg:
+            variable_inference_ins(arg)
+        elif arg['value'] in vars:
+            arg.update(vars[arg['value']])
+        else:
+            if arg['w'] or arg['r']:
+                if arg['r'] and is_constant(arg['value']):
+                    type = 'const'
+                    repr = int(arg['value'], 16)
+                elif is_register(arg['value']):
+                    type = 'temp'
+                    repr = temp_names.__next__()
+                else:
+                    type = 'var'
+                    repr = var_names.__next__()
+                info = {'type':type, 'repr':repr, 'value': arg['value']}
+                vars[arg['value']] = info
+                arg.update(info)
+
     def variable_inference_ins(ins):
-        for k, arg in ins.iteritems():
+        for k, arg in ins.items():
+            if k == 'args':
+                for a in arg:
+                    variable_inference_arg(a)
             if k not in ('src', 'dest'):
                 continue
 
-            if 'op' in arg:
-                variable_inference_ins(arg)
-            elif arg['value'] in vars:
-                ins[k].update(vars[arg['value']])
-            else:
-                if arg['w'] or arg['r']:
-                    if arg['r'] and is_constant(arg['value']):
-                        type = 'const'
-                        repr = int(arg['value'], 16)
-                    elif is_register(arg['value']):
-                        type = 'temp'
-                        repr = temp_names.next()
-                    else:
-                        type = 'var'
-                        repr = var_names.next()
-                    info = {'type':type, 'repr':repr, 'value': arg['value']}
-                    vars[arg['value']] = info
-                    ins[k].update(info)
+            variable_inference_arg(ins[k])
+
 
     var_names = new_var_name()
     temp_names = new_temp_name()
     vars = {}
 
-    for line, ins in enumerate(asm[:]):
-        variable_inference_ins(ins['ins'])
-
-    return asm
-
+    for block, depth in cfg.iterblocks():
+        for i, line in enumerate(block):
+            variable_inference_ins(line['ins'])
 
 
 def computation_collapse(cfg):
@@ -229,11 +235,10 @@ def computation_collapse(cfg):
             if k in ins and is_writable(ins, k) and is_temp_comp(ins, k):
                 key = ins[k]['repr']
                 mem[key] = lookup_vars(copy.deepcopy(ins), mem)
-                line['display'] = False
-            else:
-                line['ins'] = lookup_vars(ins, mem)
+            line['ins'] = lookup_vars(ins, mem)
         
-    def collapse_vertex((t, v), mem):
+    def collapse_vertex(vertex, mem):
+        t, v = vertex
         v_type, v_start = t
 
         if v_type == 'block':
@@ -261,6 +266,24 @@ def computation_collapse(cfg):
     for v in cfg.itervertices():
         collapse_vertex(v, {})
 
+def cremate(cfg):
+    """
+    Remove dead instructions.
+
+    Specifically, traverse the code reverse inorder and:
+     * record every read of a temporary variable
+     * if you encounter a write to a temporary variable,
+        erase it from the set
+    
+    This way record every necessary write to a temporary variable
+     and remove the unnecessary ones.
+    """
+
+    reads = {}
+    for block, depth in reversed(list(cfg.iterblocks())):
+        print (depth)
+        
+
 def new_var_name():
     for n in count(0):
         yield "var_{0}".format(n)
@@ -273,14 +296,14 @@ def decompile_function(asm, labels, name, symbols):
     signature = infer_signature(asm)
     pre, post = output_signature(signature, name)
     
-    asm = variable_inference(asm)
     cfg = control_flow_graph(asm, labels, name)
 
     symbols_rev = dict([(symbols[s]['start'], s) for s in symbols])
     function_calls.fold(cfg, symbols_rev)
 
+    variable_inference(cfg)
     computation_collapse(cfg)
-    #cfg = control_flow_graph(clp_asm, labels, name)
+    #cremate(cfg)
 
     return pre + decompile(cfg) + post
 
@@ -288,7 +311,7 @@ def decompile_functions(functions, symbols):
     labels = get_labels(functions)
 
     output = ''
-    for name, symbol in symbols.iteritems():
+    for name, symbol in symbols.items():
         output += decompile_function(functions[name], labels, name, symbols)
         output += '\n'
     

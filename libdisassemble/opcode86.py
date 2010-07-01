@@ -1,8 +1,8 @@
 # The opcode tables were taken from Mammon_'s Guide to Writing Disassemblers in Perl, You Morons!"
 # and the bastard project. http://www.eccentrix.com/members/mammon/
 
-INSTR_PREFIX=      0xF0000000L
-INSTR_PREFIX64=      0x0F000000L
+INSTR_PREFIX=      0xF0000000
+INSTR_PREFIX64=      0x0F000000
 PREFIX_LOCK =      0x00100000
 PREFIX_REPNZ=      0x00200000
 PREFIX_REPZ =      0x00400000
@@ -17,7 +17,7 @@ PREFIX_DS  =       0x30000000
 PREFIX_ES  =       0x40000000
 PREFIX_FS  =       0x50000000
 PREFIX_GS  =       0x60000000
-PREFIX_REG_MASK=   0xF0000000L
+PREFIX_REG_MASK=   0xF0000000
 
 PREFIX_REX  =      0x00008000
 PREFIX_REXW =      0x00010000
@@ -25,7 +25,7 @@ PREFIX_REXR =      0x00020000
 PREFIX_REXB =      0x00040000
 PREFIX_REXX =      0x00080000
 
-ADDRMETH_MASK =     0x00FF0000L
+ADDRMETH_MASK =     0x00FF0000
 ADDRMETH_A=   0x00010000    #   Direct address with segment prefix
 ADDRMETH_C=   0x00020000    #   MODRM reg field defines control register
 ADDRMETH_D=   0x00030000    #   MODRM reg field defines debug register
@@ -87,11 +87,11 @@ OPERSIZE = {
 }
 
 
-OPTYPE_fs= 0x10000000L      #   
-OPTYPE_fd= 0x20000000L      #   
-OPTYPE_fe= 0x30000000L      #   
-OPTYPE_fb= 0x40000000L      #   
-OPTYPE_fv= 0x50000000L      #   
+OPTYPE_fs= 0x10000000      #   
+OPTYPE_fd= 0x20000000      #   
+OPTYPE_fe= 0x30000000      #   
+OPTYPE_fb= 0x40000000      #   
+OPTYPE_fv= 0x50000000      #   
 
 INS_EXEC =               0x1000
 INS_ARITH=               0x2000
@@ -3136,6 +3136,6 @@ ADDEXP_DISP_OFFSET = 24
 MODRM_EA =  1
 MODRM_reg=  0
 ADDRMETH_MASK =     0x00FF0000
-OPTYPE_MASK   =     0xFF000000L
+OPTYPE_MASK   =     0xFF000000
 OPFLAGS_MASK  =     0x0000FFFF
 
