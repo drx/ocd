@@ -3,21 +3,21 @@ from output.conditions import conditions, condition_negs
 import debug
 import zlib
 
-def operator(op):
+def operator(op, precedence):
     '''
     Helper function for C operators.
     '''
-    return ('{i[dest]} = ', '{i[dest]} '+op+' {i[src]}')
+    return ('{i[dest]} = ', '{i[dest]} '+op+' {i[src]}', precedence)
 
 ins_table = {
-'add': operator('+'),
-'and': operator('&'),
-'mul': operator('*'),
-'mov': ('{i[dest]} = ', '{i[src]}'),
-'nop': ('', ''),
-'return': ('return {i[src]}', ''),
-'sub': operator('-'),
-'xor': operator('^'),
+'add': operator('+', 12),
+'and': operator('&', 8),
+'mul': operator('*', 13),
+'mov': ('{i[dest]} = ', '{i[src]}', 2),
+'nop': ('', '', 0),
+'return': ('return {i[src]}', '', 0),
+'sub': operator('-', 12),
+'xor': operator('^', 7),
 }
 
 def condition(cond, var='cmp'):
@@ -71,15 +71,17 @@ def output_line(line, indent):
          the EBNF for output_line.
         '''
         repr = {}
+        prec = {}
         for k, arg in ins.items():
             if k not in ('src', 'dest'):
                 continue
 
             if 'op' in ins[k]:
-                lhs, rhs = output_ins(ins[k])
-                repr[k] = '(' + rhs + ')'
+                lhs, rhs, prec[k] = output_ins(ins[k])
+                repr[k] = rhs
             else:
                 repr[k] = ins[k]['repr']
+                prec[k] = 20
 
             if type(repr[k]) == int:
                 repr[k] = repr_int(repr[k])
@@ -89,20 +91,27 @@ def output_line(line, indent):
             args = []
             for arg in ins['args']:
                 if 'op' in arg:
-                    lhs, rhs = output_ins(arg)
+                    lhs, rhs, inner_prec = output_ins(arg)
                     args.append(rhs)
                 else:
                     args.append(arg['repr'])
             rhs = '{fun}({args})'.format(fun=ins['function'], args=', '.join(args))
+            outer_prec = 20
 
         else:
             try:
-                lhs, rhs = output_op(ins['op'])
+                lhs, rhs, outer_prec = output_op(ins['op'])
             except KeyError:
                 lhs, rhs = '', '/* Unsupported immediate instruction: {ins[op]} */'.format(ins=ins)
-        return lhs.format(i=repr), rhs.format(i=repr)
+                outer_prec = 20
 
-    lhs, rhs = output_ins(line['ins'])
+        for k in dict(repr):
+            if outer_prec > prec[k]:
+                repr[k] = '(' + repr[k] + ')'
+
+        return lhs.format(i=repr), rhs.format(i=repr), outer_prec
+
+    lhs, rhs, prec = output_ins(line['ins'])
     line_repr = indent.out() + lhs + rhs
     if lhs+rhs != '':
         line_repr += ';'

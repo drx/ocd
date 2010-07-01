@@ -61,6 +61,8 @@ def repr_ins(ins, r, w):
     elif ins[0] == 'push':
         return nop
     elif ins[0] == 'imul':
+        # libdisassemble bug fix :(
+        w[0] = True
         return translate('mul')
     elif ins[0] == 'cmp':
         cmp = {'value': 'cmp', 'repr': 'cmp', 'r': False, 'w': True}
