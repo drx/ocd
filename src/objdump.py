@@ -5,11 +5,11 @@ def objdump(filename):
     Find sections and symbols in an object file.
     '''
     p1 = Popen(["objdump", "-h", filename], stdout=PIPE)
-    p2 = Popen(["awk", "-f", "src/sections.awk"], stdin=p1.stdout, stdout=PIPE)
+    p2 = Popen(["awk", "-f", "sections.awk"], stdin=p1.stdout, stdout=PIPE)
     sections_p = p2.communicate()[0].split()
 
     p1 = Popen(["objdump", "-t", filename], stdout=PIPE)
-    p2 = Popen(["awk", "-f", "src/symbols.awk"], stdin=p1.stdout, stdout=PIPE)
+    p2 = Popen(["awk", "-f", "symbols.awk"], stdin=p1.stdout, stdout=PIPE)
     #symbols_p_raw = p2.communicate()[0]
     #print(type(symbols_p_raw))
     symbols_p = p2.communicate()[0].decode().split('\n')
