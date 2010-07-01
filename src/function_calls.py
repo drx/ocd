@@ -1,4 +1,4 @@
-from libdisassemble.opcode86 import regs
+from disassemblers.libdisassemble.opcode86 import regs
 from copy import deepcopy
 
 legal_integers = ['rdi', 'rsi', 'rdx', 'rcx', 'r8', 'r9']

@@ -3,7 +3,7 @@ from copy import copy, deepcopy
 from itertools import count
 import debug
 import function_calls
-import libdisassemble.opcode86 as opcode86
+import disassemblers.libdisassemble.opcode86 as opcode86
 import re
 import representation
 import zlib

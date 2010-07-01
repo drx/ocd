@@ -36,7 +36,7 @@
 # This code largely copyright Immunity, Inc (2004), parts
 # copyright mammon and used under the LGPL by permission
 
-import libdisassemble.opcode86 as opcode86
+import disassemblers.libdisassemble.opcode86 as opcode86
 import struct
 from sys import *
 
