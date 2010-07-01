@@ -86,6 +86,9 @@ def variable_inference(cfg):
         for i, line in enumerate(block):
             variable_inference_ins(line['ins'])
 
+    var_number_indicator =  var_names.__next__()
+    m = re.match( "var_(.*)", var_number_indicator )
+    return int(m.group(1))
 
 def computation_collapse(cfg):
     '''
@@ -209,6 +212,11 @@ def cremate(cfg):
             w |= {ins['dest']['repr']}
         return w
 
+    def variable_declarations(cfg):
+        '''
+        Finds information about used variables and adds the declarations for them.
+        '''
+
     def consume_block(block, reads_in):
         '''
         Try to consume lines in a block of code.
@@ -250,10 +258,11 @@ def cremate(cfg):
 
         return reads
         
-
+    vars = set()
     for vertex in list(cfg.sortedvertices()):
-         consume_block(vertex, set())
-        
+         vars |= consume_block(vertex, set())
+   
+    return vars
 
 def new_var_name():
     '''
@@ -269,6 +278,13 @@ def new_temp_name():
     for n in count(0):
         yield "temp_{0}".format(n)
 
+def add_declarations(cfg, var_number, temps_used):
+    to_declare = temps_used
+    for i in range(0, var_number):
+        to_declare |= set(["var_{0}".format(i)])
+    
+    print(to_declare)
+    
 def decompile_function(asm, labels, name, symbols):
     '''
     Decompile a function.
@@ -280,9 +296,10 @@ def decompile_function(asm, labels, name, symbols):
     symbols_rev = {symbols[s]['start']: s for s in symbols}
     function_calls.fold(cfg, symbols_rev)
 
-    variable_inference(cfg)
+    var_number = variable_inference(cfg)
     computation_collapse(cfg)
-    cremate(cfg)
+    temps_used = cremate(cfg)
+    add_declarations(cfg, var_number, temps_used)
 
     return cfg, signature
 
