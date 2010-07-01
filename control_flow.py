@@ -305,7 +305,6 @@ def graph_transform(graph):
 
     rules = [t_trivial, t_ifelse, t_if, t_while, t_cons]
 
-    print(list(map(flip(graph), rules)))
     i = dropwhile(lambda x: not x[0], map(flip(graph), rules))
     try:
         true, graph = i.__next__()
