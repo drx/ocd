@@ -1,6 +1,9 @@
 from subprocess import Popen, PIPE
 
 def objdump(filename):
+    '''
+    Find sections and symbols in an object file.
+    '''
     p1 = Popen(["objdump", "-h", filename], stdout=PIPE)
     p2 = Popen(["awk", "-f", "src/sections.awk"], stdin=p1.stdout, stdout=PIPE)
     sections_p = p2.communicate()[0].split()
