@@ -1,5 +1,5 @@
 from control_flow import control_flow_graph
-from copy import copy
+from copy import copy, deepcopy
 from representation import conditions, condition_negs, representation
 from itertools import starmap, repeat, count
 from postprocessor import postprocessor
@@ -299,10 +299,33 @@ def cremate(cfg):
             w |= {ins['dest']['repr']}
         return w
 
-    reads = set()
-    for block, depth in reversed(list(cfg.iterblocks())):
-        for line in reversed(block):
-             
+    def consume_block(block, reads_in):
+        reads = deepcopy(reads_in)
+        t, v = block
+        v_type, v_start = t
+
+        if v_type == 'if':
+            cond, true = v
+            return consume_block(true, reads)
+
+        if v_type == 'while':
+            cond, pre, loop = v
+            reads = consume_block(loop, reads)
+            return consume_block(pre, reads)
+
+        if v_type == 'cons':
+            for b in reversed(v):
+                reads = consume_block(b, reads)
+
+            return reads
+
+        if v_type == 'ifelse':
+            cond, true, false = v
+            reads_true = consume_block(true, reads)
+            reads_false = consume_block(false, reads)
+            return reads_true | reads_false
+
+        for line in reversed(block[1]):
             w = get_written(line['ins'])
             r = get_read(line['ins'])
             if w <= reads:
@@ -312,7 +335,11 @@ def cremate(cfg):
             reads -= w
             reads |= r
 
-    print(reads)
+        return reads
+        
+
+    for vertex in list(cfg.itervertices()):
+         consume_block(vertex, set())
         
 
 def new_var_name():
