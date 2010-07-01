@@ -1,148 +1,30 @@
 from control_flow import control_flow_graph
 from copy import copy, deepcopy
-from representation import conditions, condition_negs, representation
-from itertools import starmap, repeat, count
-from postprocessor import postprocessor
-import copy
+from itertools import count
 import debug
 import function_calls
 import libdisassemble.opcode86 as opcode86
 import re
+import representation
 import zlib
 
-class Indent():
-    def __init__(self, level=0):
-        self.level = level
-
-    def inc(self):
-        new = copy.copy(self)
-        new.level += 1
-        return new
-
-    def out(self):
-        return '\t'*self.level
-
-def condition(cond, var='cmp'):
-    if cond[0] == '!':
-        cond = condition_negs[cond[1:]]
-    return conditions[cond].format(cond=var)
-
-def decompile(cfg):
-    return '\n'.join(map(decompile_vertex, cfg.itervertices()))
-
-def decompile_vertex(vertex, indent=None):
-    t, v = vertex
-    block_type, block_start = t
-    if indent is None:
-        indent = Indent(1)
-    if block_type == 'block':
-        return '\n'.join(starmap(decompile_line, zip(v, repeat(indent))))
-
-    elif block_type == 'if':
-        cond, block = v
-        return '\n{indent}if ({cond})\n{indent}{{\n{block}\n{indent}}}\n'.format(
-            cond=condition(cond), block=decompile_vertex(block, indent.inc()), indent=indent.out())
-
-    elif block_type == 'ifelse':
-        cond, true, false = v
-        return '\n{indent}if ({cond})\n{indent}{{\n{true}\n{indent}}}\n{indent}else\n{indent}{{\n{false}\n{indent}}}\n'.format(
-            cond=condition(cond), true=decompile_vertex(true, indent.inc()), false=decompile_vertex(false, indent.inc()),
-            indent=indent.out())
-
-    elif block_type == 'while':
-        cond, pre, loop = v
-        return '\n{indent}while ({cond})\n{indent}{{\n{loop}\n{pre}\n{indent}}}\n'.format(
-            indent=indent.out(), cond=condition(cond),
-            pre=decompile_vertex(pre, indent.inc()), loop=decompile_vertex(loop, indent.inc())
-        )
-
-    elif block_type == 'cons':
-        out = ''
-        for b in v:
-            out += decompile_vertex(b, indent)
-        return out
-
-    return ''
-
 def is_constant(x):
+    '''
+    Test of the argument is a constant.
+    '''
     return re.match("-?0x.*", x)
 
-def repr_int(n):
-    """
-    Get the representation of an integer.
-    
-    The representation is chosen based on its Kolmogorov complexity,
-     i.e. the repr r is chosen which has the minimal value
-     len(zlib.compress(r))
-    """
-    reprs = [('{0}','{0}'), ('{0:x}', '0x{0:x}')]
-    lengths = [len(zlib.compress(r[0].format(n).encode())) for r in reprs]
-    return reprs[lengths.index(min(lengths))][1].format(n)
-
-def decompile_line(line, indent):
+def is_register(x):
     '''
-    Decompile a line of code. A line contains an instruction and
-     some metainformation about that instruction (its location,
-     etc.)
-
-    The pseudo-EBNF of lines is as follows:
-
-     line = location, debug, instruction
-     instruction = op, argument*
-     argument = value, repr | instruction
+    Test if the argument is a register.
     '''
-    def decompile_ins(ins):
-        '''
-        Decompile an instruction. Instructions are trees, see
-         the EBNF for decompile_line.
-        '''
-        repr = {}
-        for k, arg in ins.items():
-            if k not in ('src', 'dest'):
-                continue
-
-            if 'op' in ins[k]:
-                lhs, rhs = decompile_ins(ins[k])
-                repr[k] = '(' + rhs + ')'
-            else:
-                repr[k] = ins[k]['repr']
-
-            if type(repr[k]) == int:
-                repr[k] = repr_int(repr[k])
-
-        if ins['op'] == 'apply':
-            lhs = ''
-            args = []
-            for arg in ins['args']:
-                if 'op' in arg:
-                    lhs, rhs = decompile_ins(arg)
-                    args.append(rhs)
-                else:
-                    args.append(arg['repr'])
-            rhs = '{fun}({args})'.format(fun=ins['function'], args=', '.join(args))
-
-        else:
-            try:
-                lhs, rhs = representation(ins['op'])
-            except KeyError:
-                return '', '/* Unsupported instruction: {ins} */'.format(ins=ins)
-        return lhs.format(i=repr), rhs.format(i=repr)
-
-    lhs, rhs = decompile_ins(line['ins'])
-    line_repr = indent.out() + lhs + rhs
-    if lhs+rhs != '':
-        line_repr += ';'
-
-    if not line['display']:
-        line_repr = ''
-
-    if debug.check('misc'):
-        from binascii import hexlify
-        line_repr += '\n{indent}{blue}/* {line} */{black}'.format(indent=indent.out(), line=line, blue='\033[94m', black='\033[0m')
-
-    return line_repr
+    registers = map(lambda x: x[0], opcode86.regs)
+    return x in registers
 
 def get_labels(functions):
+    '''
+    Find addresses that need to be labeled.
+    '''
     labels = {}
     for function in functions:
         for ins in functions[function]:
@@ -153,24 +35,18 @@ def get_labels(functions):
     return labels
 
 def infer_signature(asm):
+    '''
+    Infer the signature of a function.
+    '''
     return ('int', [])
 
-def output_signature(signature, name):
-    fun_type, args = signature
-
-    def f(arg):
-        i, type = arg
-        return type + ' arg' + i
-
-    pre = fun_type + ' ' + name + '(' + ', '.join(map(f, enumerate(args))) + ')\n{\n'
-    post = '\n}'
-    return pre, post
-
-def is_register(x):
-    registers = map(lambda x: x[0], opcode86.regs)
-    return x in registers
-
 def variable_inference(cfg):
+    '''
+    Infer the variables in code.
+
+    Change all temporary variables (registers) into temp_0, temp_1, etc.
+     and other variables into var_0, var_1, etc.
+    '''
     def variable_inference_arg(arg):
         if 'op' in arg:
             variable_inference_ins(arg)
@@ -212,13 +88,35 @@ def variable_inference(cfg):
 
 
 def computation_collapse(cfg):
+    '''
+    Collapse the computation tree in the graph.
+
+    For example, this code:
+
+     a = 5
+     b = a + 2
+     c = b * 2
+
+    would be converted to:
+
+     c = (5+2)*2
+    '''
     def is_writable(ins, k):
+        '''
+        Check if the argument is writable.
+        '''
         return k in ins and 'w' in ins[k] and ins[k]['w']
 
     def is_temp_comp(ins, k):
+        '''
+        Check if the argument is a temporary.
+        '''
         return k in ins and 'type' in ins[k] and ins[k]['type'] == 'temp'
 
     def lookup_vars(ins, mem):
+        '''
+        Lookup variables in memory.
+        '''
         for k in ('src','dest'):
             if k in ins and 'op' in ins[k]:
                 ins[k] = lookup_vars(ins[k], mem)
@@ -230,14 +128,20 @@ def computation_collapse(cfg):
         return ins
 
     def collapse_line(line, mem):
+        '''
+        Try to collapse a line.
+        '''
         ins = line['ins']
         for k in ('dest',):
             if k in ins and is_writable(ins, k) and is_temp_comp(ins, k):
                 key = ins[k]['repr']
-                mem[key] = lookup_vars(copy.deepcopy(ins), mem)
+                mem[key] = lookup_vars(deepcopy(ins), mem)
             line['ins'] = lookup_vars(ins, mem)
         
     def collapse_vertex(vertex, mem):
+        '''
+        Collapse a vertex of the cfg.
+        '''
         t, v = vertex
         v_type, v_start = t
 
@@ -251,23 +155,23 @@ def computation_collapse(cfg):
 
         elif v_type == 'if':
             cond, block = v
-            collapse_vertex(block, copy.deepcopy(mem))
+            collapse_vertex(block, deepcopy(mem))
 
         elif v_type == 'ifelse':
             cond, true, false = v
             for block in (true, false):
-                collapse_vertex(block, copy.deepcopy(mem))
+                collapse_vertex(block, deepcopy(mem))
         
         elif v_type == 'while':
             cond, pre, loop = v
             for block in (pre, loop):
-                collapse_vertex(block, copy.deepcopy(mem))
+                collapse_vertex(block, deepcopy(mem))
 
-    for v in cfg.itervertices():
+    for v in cfg.sortedvertices():
         collapse_vertex(v, {})
 
 def cremate(cfg):
-    """
+    '''
     Remove dead instructions.
 
     Specifically, traverse the code reverse inorder and:
@@ -277,7 +181,7 @@ def cremate(cfg):
     
     This way record every necessary write to a temporary variable
      and remove the unnecessary ones.
-    """
+    '''
 
     def get_read_arg(arg):
         if 'op' in arg:
@@ -288,18 +192,27 @@ def cremate(cfg):
         return set()
 
     def get_read(ins):
+        '''
+        Get the set of variables read from in the instruction.
+        '''
         r = set()
         if 'src' in ins:
             r |= get_read_arg(ins['src'])
         return r
 
     def get_written(ins):
+        '''
+        Get the set of variables written to in the instruction.
+        '''
         w = set()
         if 'dest' in ins and ins['dest']['w'] and ins['dest']['type'] == 'temp':
             w |= {ins['dest']['repr']}
         return w
 
     def consume_block(block, reads_in):
+        '''
+        Try to consume lines in a block of code.
+        '''
         reads = deepcopy(reads_in)
         t, v = block
         v_type, v_start = t
@@ -338,21 +251,29 @@ def cremate(cfg):
         return reads
         
 
-    for vertex in list(cfg.itervertices()):
+    for vertex in list(cfg.sortedvertices()):
          consume_block(vertex, set())
         
 
 def new_var_name():
+    '''
+    Generator of new variable names.
+    '''
     for n in count(0):
         yield "var_{0}".format(n)
 
 def new_temp_name():
+    '''
+    Generator of new temporary variable names.
+    '''
     for n in count(0):
         yield "temp_{0}".format(n)
 
 def decompile_function(asm, labels, name, symbols):
+    '''
+    Decompile a function.
+    '''
     signature = infer_signature(asm)
-    pre, post = output_signature(signature, name)
     
     cfg = control_flow_graph(asm, labels, name)
 
@@ -363,16 +284,17 @@ def decompile_function(asm, labels, name, symbols):
     computation_collapse(cfg)
     cremate(cfg)
 
-    return pre + decompile(cfg) + post
+    return cfg, signature
 
 def decompile_functions(functions, symbols):
+    '''
+    Decompile all functions.
+    '''
     labels = get_labels(functions)
 
-    output = ''
+    decompiled_functions = {}
+
     for name, symbol in symbols.items():
-        output += decompile_function(functions[name], labels, name, symbols)
-        output += '\n'
+        decompiled_functions[name] = decompile_function(functions[name], labels, name, symbols)
     
-    #output = postprocessor(output) #comment for disable
-    
-    return '\n'.join([line for line in output.split('\n') if line.strip()])
+    return decompiled_functions 

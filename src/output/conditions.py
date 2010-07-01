@@ -1,24 +1,3 @@
-repr_table_c = {
-'adc': ('{i[dest]} = ', '{i[dest]} + {i[src]} + {cf}'),
-'add': ('{i[dest]} = ', '{i[dest]} + {i[src]}'),
-'and': ('({i[dest]} = ', '{i[dest]} & {i[src]}'),
-'bt': ('{cf} = ', '{i[dest][{i[src]}]}'),
-'clc': ('{cf} = ', '0'),
-'cld': ('{df} = ', '0'),
-'cmp': ('cmp = ', '{i[dest]} - {i[src]}'),
-'imul': ('{i[dest]} = ', '{i[dest]} * {i[src]}'),
-'dec': ('{i[dest]} = ', '{i[dest]} - 1'),
-'lea': ('{i[dest]} = ', '{i[src]}'),
-'mov': ('{i[dest]} = ', '{i[src]}'),
-#'pop', '
-#'push', '
-'jump': ('', ''),
-'nop': ('', ''),
-'return': ('return {i[src]}', ''),
-'sub': ('{i[dest]} = ', '{i[dest]} - {i[src]}'),
-'xor': ('{i[dest]} = ', '{i[dest]} ^ {i[src]}'),
-}
-
 condition_negs = {
     'a': 'be', 'ae': 'b', 'b': 'ae', 'be': 'a', 'c': 'a',
     'e': 'ne', 'ne': 'e',
@@ -68,11 +47,3 @@ conditions = {
     'false': '0',
 } 
 
-def jump(env):
-    return env['loc']+env['length']+int(env['ins']['dest'],16)
-
-def representation(op, lang='C'):
-    langs = {
-        'C': repr_table_c
-    }
-    return langs[lang][op]

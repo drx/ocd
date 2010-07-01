@@ -15,9 +15,9 @@ def check(cond):
 def set(cond=None):
     global __debug
     if cond is None:
-        __debug.append('all')
-    else:
-        __debug.append(cond)
+        cond = 'all'
+
+    __debug.append(cond)
 
 def sprint(str, cond):
     if debug_check(cond):

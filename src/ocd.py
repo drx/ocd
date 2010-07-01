@@ -1,18 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from disassemble import disassemble
 from decompile import decompile_functions
 import control_flow
 import debug
+import representation
 
 from subprocess import Popen, PIPE
 
 def objdump(filename):
     p1 = Popen(["objdump", "-h", filename], stdout=PIPE)
-    p2 = Popen(["awk", "-f", "sections.awk"], stdin=p1.stdout, stdout=PIPE)
+    p2 = Popen(["awk", "-f", "src/sections.awk"], stdin=p1.stdout, stdout=PIPE)
     sections_p = p2.communicate()[0].split()
 
     p1 = Popen(["objdump", "-t", filename], stdout=PIPE)
-    p2 = Popen(["awk", "-f", "symbols.awk"], stdin=p1.stdout, stdout=PIPE)
+    p2 = Popen(["awk", "-f", "src/symbols.awk"], stdin=p1.stdout, stdout=PIPE)
     #symbols_p_raw = p2.communicate()[0]
     #print(type(symbols_p_raw))
     symbols_p = p2.communicate()[0].decode().split('\n')
@@ -69,7 +70,9 @@ if __name__=="__main__":
         functions['start'] = disassemble(f.read(text['length']), text['virt'])
         symbols['start'] = {'start': text['virt'], 'length': text['length']}
 
-    print(decompile_functions(functions, symbols))
+    decompiled_functions = decompile_functions(functions, symbols)
+
+    print(representation.output_functions(decompiled_functions))
 
     if options.graphfile:
         gf.write("}\n")

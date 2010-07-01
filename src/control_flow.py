@@ -4,16 +4,28 @@ from itertools import dropwhile, permutations
 graphfile = None
 
 class Graph:
+    '''
+    Basic graph structure based on successor and predecessor lists.
+    '''
     def __init__(self):
+        '''
+        Initialize the graph with empty dicts of edges and vertices.
+        '''
         self._pred = defaultdict(list)
         self._succ = defaultdict(list)
         self._edge_values = {}
         self._vertices = {}
 
     def __str__(self):
+        '''
+        Return the string representation of the graph.
+        '''
         return 'Graph(vertices=' + str(self._vertices) + ', pred=' + str(self._pred) + ', succ=' + str(self._succ) + ')'
 
     def __contains__(self, vertex):
+        '''
+        Check if the graph contains a vertex.
+        '''
         v, t = vertex
         if t == 'in':
             return (v in self._pred)
@@ -23,18 +35,33 @@ class Graph:
             return (v in self._pred or v in self._succ)
 
     def successors(self, key):
+        '''
+        Return a list of successors for a given vertex.
+        '''
         return self._succ[key]
 
     def predecessors(self, key):
+        '''
+        Return a list of predecessors for a given vertex.
+        '''
         return self._pred[key]
 
     def vertex(self, k):
+        '''
+        Return a vertex.
+        '''
         return self._vertices[k]
 
     def set_vertex(self, k, v=None):
+        '''
+        Set a vertex.
+        '''
         self._vertices[k] = v
 
     def remove_vertices(self, ks):
+        '''
+        Remove vertices, along with edges adjacent to them.
+        '''
         for k in ks:
             for p in self._pred[k]:
                 self._succ[p].remove(k)
@@ -45,39 +72,69 @@ class Graph:
             del self._vertices[k]
 
     def vertices(self):
+        '''
+        Return the list of vertices.
+        '''
         return self._vertices
 
     def deg_in(self, k):
+        '''
+        Return the in-degree of a vertex.
+        '''
         return len(self._pred[k])
 
     def deg_out(self, k):
+        '''
+        Return the out-degree of a vertex.
+        '''
         return len(self._succ[k])
 
     def add_edge(self, v_in, v_out, value=None):
+        '''
+        Add an edge to the graph, optionally specifying a value.
+        '''
         self._succ[v_in].append(v_out)
         self._pred[v_out].append(v_in)
         self._edge_values[(v_in, v_out)] = value
 
     def move_predecessors(self, v, v_new):
+        '''
+        Move edges pointing to a vertex so they point to another.
+        '''
         for pred in self.predecessors(v)[:]:
             self.add_edge(pred, v_new, self.edge(pred, v))
             self.remove_edge(pred, v)
 
     def move_successors(self, v, v_new):
+        '''
+        Move edges coming out of a vertex so they come out of another.
+        '''
         for succ in self.successors(v)[:]:
             self.add_edge(v_new, succ, self.edge(v, succ))
             self.remove_edge(v, succ)
 
     def edge(self, v_in, v_out):
+        '''
+        Return an edge.
+        '''
         return self._edge_values[(v_in, v_out)]
 
     def remove_edge(self, v_in, v_out):
+        '''
+        Remove an edge.
+        '''
         self._succ[v_in].remove(v_out)
         self._pred[v_out].remove(v_in)
         del self._edge_values[(v_in, v_out)]
 
-    def itervertices(self):
+    def sortedvertices(self):
+        '''
+        Return an iterator of sorted vertices (according to their original address).
+        '''
         def key_f(arg):
+            '''
+            Use the vertex start address as key.
+            '''
             arg_v, arg_t = arg
             a, b = arg_v
             return b
@@ -104,11 +161,14 @@ class Graph:
                     for y in traverse(block, depth+1):
                         yield y                    
 
-        for v in self.itervertices():
+        for v in self.sortedvertices():
             for y in traverse(v, 1):
                 yield y
 
     def export(self, f, name, random=False):
+        '''
+        Export a graph to graphviz format.
+        '''
         def block_label(block_type, block_loc, block):
             if block_type == 'block':
                 return "block\\n{0:x}:{1:x}".format(block_loc, block[-1]['loc'])
@@ -139,7 +199,7 @@ class Graph:
 
 def control_flow_graph(function, labels, name):
     '''
-    Analyze the control flow graph (cfg) of the function
+    Analyze the control flow graph (cfg) of the function.
     '''
 
     graph = Graph()

@@ -6,10 +6,17 @@ legal_sse = ['xmm0', 'xmm1', 'xmm2', 'xmm3', 'xmm4', 'xmm5', 'xmm6', 'xmm7']
 legal_other = ['rax']
 
 def reg_normalize(reg):
+    '''
+    Normalize a register to a form independent of its size.
+    '''
     idx = list(map(lambda x: x[0], regs)).index(reg)
     return regs[idx&0xF][0]
 
 class Params:
+    '''
+    A data structure that holds the current list of parameters used
+     and is able to let you know when it ends using some heuristics.
+    '''
     def __init__(self):
         self.memory = []
         self.integers = []
@@ -18,6 +25,13 @@ class Params:
         self.args = []
 
     def add(self, reg, arg):
+        '''
+        Try to add a register to the list of params.
+
+        If its the next legal register in a list of parameters, it's added
+         and True is returned. If it isn't, False is returned so that the
+         function can be wrapped.
+        '''
         arg = deepcopy(arg)
         if 'w' in arg:
             arg['w'] = False
@@ -45,6 +59,10 @@ class Params:
             return False
 
 def fold(cfg, symbols):
+    '''
+    Fold as many function calls as its possible, infering arguments lists
+     along the way.
+    '''
     for block, depth in cfg.iterblocks():
         inside_call = False
         for n, line in enumerate(reversed(block)):

@@ -1,8 +1,6 @@
 from libdisassemble.disassemble import *
 import debug
 
-
-
 def repr_x64(ins, r, w):
     def arg(n):
         return {'value': ins[n+1], 'repr': ins[n+1], 'r': r[n], 'w': w[n]}
@@ -98,6 +96,7 @@ def disassemble_x64(buf, virt):
                 j_addr = addr+length+ins['dest']['repr']
 #                if j_addr not in result:
                 entries.append(j_addr)
+                result[addr]['display'] = False
                 if ins['cond'] == 'true':
                     break
             off += length
