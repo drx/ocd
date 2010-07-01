@@ -82,7 +82,7 @@ def repr_ins(ins, r, w):
     
     raise Exception('Bad x64 instruction: '+str(ins))
 
-def disassemble(buf, virt):
+def disassemble(buf, virt, sections, binary):
     '''
     Disassemble a block of x64 code.
     '''

@@ -31,8 +31,11 @@ if __name__=="__main__":
     filename = args[0]
 
     f = open(filename, "rb")
+    binary = f.read()
+    f.close()
 
-    text, symbols = objdump(filename)
+    sections, symbols = objdump(filename)
+    text = sections['.text']
 
     if options.graphfile:
         gf = open(options.graphfile, 'w')
@@ -43,11 +46,12 @@ if __name__=="__main__":
     functions = {}
     if symbols:
         for name, symbol in symbols.items():
-            f.seek(symbol['start']-text['virt']+text['start'])
-            functions[name] = disassemble(f.read(symbol['length']), symbol['start'])
+            if not name.startswith('_'):
+                start = symbol['start']-text['virt']+text['start']
+                length = symbol['length']
+                functions[name] = disassemble(binary[start:start+length], symbol['start'], sections, binary)
     else:
-        f.seek(text['start'])
-        functions['start'] = disassemble(f.read(text['length']), text['virt'])
+        functions['start'] = disassemble(binary[text['start']:text['start']+text['length']], text['virt'], sections, binary)
         symbols['start'] = {'start': text['virt'], 'length': text['length']}
 
     decompiled_functions = decompile_functions(functions, symbols)

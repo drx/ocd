@@ -311,7 +311,7 @@ def decompile_functions(functions, symbols):
 
     decompiled_functions = {}
 
-    for name, symbol in symbols.items():
+    for name, symbol in functions.items():
         decompiled_functions[name] = decompile_function(functions[name], labels, name, symbols)
     
     return decompiled_functions 
