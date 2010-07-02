@@ -42,17 +42,18 @@ if __name__=="__main__":
         gf.write("digraph cfg {\n")
         control_flow.graphfile = gf
 
-
     functions = {}
     if symbols:
         for name, symbol in symbols.items():
-            if not name.startswith('_'):
+            if not name.startswith('_') and symbol['type'] == 'F':
                 start = symbol['start']-text['virt']+text['start']
                 length = symbol['length']
                 functions[name] = disassemble(binary[start:start+length], symbol['start'], sections, binary)
     else:
         functions['start'] = disassemble(binary[text['start']:text['start']+text['length']], text['virt'], sections, binary)
         symbols['start'] = {'start': text['virt'], 'length': text['length']}
+
+    print(functions.keys())
 
     decompiled_functions = decompile_functions(functions, symbols)
 

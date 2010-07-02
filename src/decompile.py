@@ -293,9 +293,8 @@ def decompile_function(asm, labels, name, symbols):
     Decompile a function.
     '''
     signature = infer_signature(asm)
-    
+   
     cfg = control_flow_graph(asm, labels, name)
-
     symbols_rev = {symbols[s]['start']: s for s in symbols}
     function_calls.fold(cfg, symbols_rev)
 

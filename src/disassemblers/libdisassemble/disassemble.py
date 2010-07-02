@@ -307,7 +307,7 @@ class Opcode:
                 self.off-=1
             #print >>stderr,("   opcode = %s\n   opcodetype = %x\n   cpu = %x\n   off = %d"%(ptr[6], ptr[1], ptr[5], off+1))
             
-            bytes=0
+            n_bytes=0
             #       src dst aux
             values=['', '', '' ]		
             r = [False]*3
@@ -384,14 +384,14 @@ class Opcode:
     
                 elif addr_meth == opcode86.ADDRMETH_I:
                     if tmp & opcode86.OP_SIGNED:
-                        ret = (operand_size, Address( self.data[self.off+bytes:], operand_size, tmp))
+                        ret = (operand_size, Address( self.data[self.off+n_bytes:], operand_size, tmp))
                         #ret = (self.addr_size, Address( self.data[self.off+bytes:], operand_size, tmp))
                     else:
-                        ret = (operand_size, Address( self.data[self.off+bytes:], operand_size,tmp,  signed=0))
+                        ret = (operand_size, Address( self.data[self.off+n_bytes:], operand_size,tmp,  signed=0))
                         #ret = (self.addr_size, Address( self.data[self.off+bytes:], operand_size,tmp,  signed=0))
     
                 elif addr_meth == opcode86.ADDRMETH_J:
-                    ret = (operand_size, Address( self.data[self.off+bytes:], operand_size, tmp, signed=1, relative=True))
+                    ret = (operand_size, Address( self.data[self.off+n_bytes:], operand_size, tmp, signed=1, relative=True))
                     #ret = (self.addr_size, Address( self.data[self.off+bytes:], operand_size, tmp, signed=1, relative=True))
     
                 elif addr_meth == opcode86.ADDRMETH_O:
@@ -414,8 +414,7 @@ class Opcode:
                             regoff += 8
                         ret = (0, Register(ptr[5+a]+regoff, tmp))
                     elif tmp & opcode86.OP_IMM:
-                        print("a")
-                        ret = (0, Address("%c"%ptr[5+a], 1, signed=0))
+                        ret = (0, Address(bytes([ptr[5+a]]), 1, signed=0))
                     else:
                         ret= (0, None)
                 if ret[1]: 
@@ -424,7 +423,7 @@ class Opcode:
                 values[a-2]=ret[1]
                 r[a-2] = (tmp & opcode86.OP_R) != 0
                 w[a-2] = (tmp & opcode86.OP_W) != 0
-                bytes += ret[0]
+                n_bytes += ret[0]
                 
             self.source = values[0]
             self.dest   = values[1]
@@ -432,7 +431,7 @@ class Opcode:
             self.r = r
             self.w = w
     
-            self.off += bytes
+            self.off += n_bytes
             #self.data = self.data[:self.off]
         except IndexError:
             output = ""
