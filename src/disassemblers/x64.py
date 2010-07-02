@@ -1,7 +1,7 @@
 from disassemblers.libdisassemble.disassemble import *
 import debug
 
-def repr_ins(ins, r, w):
+def repr_ins(ins, r, w, objbounds, sections, binary):
     '''
     Represent an x64 instruction in the immediate instruction format.
     '''
@@ -9,7 +9,27 @@ def repr_ins(ins, r, w):
         '''
         Helper function for converting arguments.
         '''
-        return {'value': ins[n+1], 'repr': ins[n+1], 'r': r[n], 'w': w[n]}
+        value = ins[n+1]
+        arg_repr = value
+
+        if value.startswith('0x'):
+            val = int(value, 16)
+            if val >= objbounds[0] and val < objbounds[1]:
+                '''Likely candidate for a constant'''
+    
+                ro = sections['.rodata']
+                if val >= ro['virt'] and val < ro['virt']+ro['length']:
+                    addr = ro['start']+val-ro['virt']
+                    for i, b in enumerate(binary[addr:]):
+                        if b == 0:
+                            s = binary[addr:addr+i].decode()
+                            s = '"' + repr(s)[1:-1] + '"'
+                            arg_repr = s
+                            break
+                        if i > 100:
+                            break
+
+        return {'value': value, 'repr': arg_repr, 'r': r[n], 'w': w[n]}
 
     def translate(op):
         '''
@@ -17,7 +37,7 @@ def repr_ins(ins, r, w):
          for example imul -> mul.
         '''
         ins[0] = op
-        return repr_ins(ins, r, w)
+        return repr_ins(ins, r, w, objbounds, sections, binary)
 
     def jump_dest():
         '''
@@ -87,6 +107,11 @@ def disassemble(buf, virt, sections, binary):
     Disassemble a block of x64 code.
     '''
 
+    virts = [(sections[sect]['virt'], sections[sect]['length']) for sect in sections if sections[sect]['virt']]
+    objmin = min(virt[0] for virt in virts)
+    objmax = max(virt[0]+virt[1] for virt in virts)
+    objbounds = (objmin, objmax)
+
     FORMAT="INTEL"
     entries = [virt]
 
@@ -102,7 +127,7 @@ def disassemble(buf, virt, sections, binary):
                 ins, r, w = p.getOpcode(FORMAT)
             except ValueError:
                 break
-            ins = repr_ins(ins, r, w)
+            ins = repr_ins(ins, r, w, objbounds, sections, binary)
 
             if debug.check('asm_rw'):
                 print(ins, r, w)

@@ -56,7 +56,10 @@ def variable_inference(cfg):
             if arg['w'] or arg['r']:
                 if arg['r'] and is_constant(arg['value']):
                     type = 'const'
-                    repr = int(arg['value'], 16)
+                    if arg['value'] == arg['repr']:
+                        repr = int(arg['value'], 16)
+                    else:
+                        repr = arg['repr']
                 elif is_register(arg['value']):
                     type = 'temp'
                     repr = temp_names.__next__()
