@@ -286,7 +286,7 @@ def add_declarations(cfg, var_number, temps_used):
     for i in range(0, var_number):
         to_declare |= set(["var_{0}".format(i)])
     
-    print(to_declare)
+    #print(to_declare)
     
 def decompile_function(asm, labels, name, symbols):
     '''

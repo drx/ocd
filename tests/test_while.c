@@ -1,6 +1,6 @@
 int main()
 {
-	int n = 10;
+	int n = 10, m;
 	while(n --> 0)
-		printf("%d\n", n);
+		m = printf("n = %d\n", n);
 }

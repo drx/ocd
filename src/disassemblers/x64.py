@@ -145,8 +145,8 @@ def disassemble(buf, virt, sections, binary):
 #                    entries.append(j_addr)
             if ins['op'] == 'jump':
                 j_addr = addr+length+ins['dest']['repr']
-#                if j_addr not in result:
-                entries.append(j_addr)
+                if j_addr not in result:
+                    entries.append(j_addr)
                 result[addr]['display'] = False
                 if ins['cond'] == 'true':
                     break
