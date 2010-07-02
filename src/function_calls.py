@@ -86,7 +86,8 @@ def fold(cfg, symbols):
                 call_params = Params()
                 function_name = 'unknown_function'
                 if 'repr' in line['ins']['dest']:
-                    addr = line['loc']+line['length']+line['ins']['dest']['repr']
-                    if addr in symbols:
-                        function_name = symbols[addr]
+                    if type(line['ins']['dest']['repr']) == int:
+                        addr = line['loc']+line['length']+line['ins']['dest']['repr']
+                        if addr in symbols:
+                            function_name = symbols[addr]
                     
