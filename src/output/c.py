@@ -12,6 +12,7 @@ def operator(op, precedence):
 ins_table = {
 'add': operator('+', 12),
 'and': operator('&', 8),
+'div': operator('/', 13),
 'mul': operator('*', 13),
 'mov': ('{i[dest]} = ', '{i[src]}', 2),
 'nop': ('', '', 0),

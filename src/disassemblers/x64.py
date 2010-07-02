@@ -84,6 +84,8 @@ def repr_ins(ins, r, w, objbounds, sections, binary):
         # libdisassemble bug fix :(
         w[0] = True
         return translate('mul')
+    elif ins[0] == 'idiv':
+        return translate('div')
     elif ins[0] == 'cmp':
         cmp = {'value': 'cmp', 'repr': 'cmp', 'r': False, 'w': True}
         src = {'op': 'sub', 'dest': arg(0), 'src': arg(1)}
