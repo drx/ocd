@@ -73,6 +73,12 @@ def repr_ins(ins, r, w, objbounds, sections, binary):
         return {'op': 'jump', 'cond': cond, 'dest': jump_dest()}
     elif ins[0] == 'call':
         return {'op': 'call', 'dest': jump_dest()}
+    elif ins[0] == 'arpl':
+        return nop
+    elif ins[0] == 'cwde':
+        dest = {'value': 'eax', 'repr': 'eax', 'r': False, 'w': True}
+        src = {'value': 'ax', 'repr': 'eax', 'r': True, 'w': False}
+        return {'op': 'mov', 'dest': dest, 'src': src}
     elif ins[0] == 'leave':
         return nop
     elif ins[0] == 'lea':

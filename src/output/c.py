@@ -17,6 +17,8 @@ ins_table = {
 'mov': ('{i[dest]} = ', '{i[src]}', 2),
 'nop': ('', '', 0),
 'return': ('return {i[src]}', '', 0),
+'sar': operator('>>', 11),
+'sal': operator('<<', 11),
 'sub': operator('-', 12),
 'xor': operator('^', 7),
 }
