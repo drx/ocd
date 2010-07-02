@@ -88,6 +88,10 @@ def repr_ins(ins, r, w, objbounds, sections, binary):
         cmp = {'value': 'cmp', 'repr': 'cmp', 'r': False, 'w': True}
         src = {'op': 'sub', 'dest': arg(0), 'src': arg(1)}
         return {'op': 'mov', 'dest': cmp, 'src': src}
+    elif ins[0] == 'test':
+        cmp = {'value': 'cmp', 'repr': 'cmp', 'r': False, 'w': True}
+        src = {'op': 'and', 'dest': arg(0), 'src': arg(1)}
+        return {'op': 'mov', 'dest': cmp, 'src': src}
     elif ins[0] == 'ret':
         dest = {'value': 'eax', 'repr': 'eax', 'r': True, 'w': False}
         return {'op': 'return', 'src': dest}
