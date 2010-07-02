@@ -119,19 +119,19 @@ veryclean	: clean
 include $(SRC:.tex=.d)
 
 usage:
-	echo "\\begin{verbatim}" > usage.tex
-	../ocd.py --help >> usage.tex
-	echo "\\end{verbatim}" >> usage.tex
+	echo '\\''begin{verbatim}' > usage.tex
+	../ocd --help >> usage.tex
+	echo '\\end{verbatim}' >> usage.tex
 
 copyright:
-	echo "\\begin{verbatim}" > copyright.tex
+	echo '\\begin{verbatim}' > copyright.tex
 	cat ../LICENSE >> copyright.tex
-	echo "\\end{verbatim}" >> copyright.tex
+	echo '\\end{verbatim}' >> copyright.tex
 
 cfg_example:
 	if [ ! -d images ]; then mkdir images; fi
 	(cd ../tests; make all)
-	(cd ..; ./ocd.py -g ./doc/temp_graph ./tests/test_ack >/dev/null)
+	(cd ..; ./ocd -g ./doc/temp_graph ./tests/test_ack >/dev/null)
 	../graph2png.sh temp_graph
 	convert temp_graph.png ./images/cfg_example.eps
 	rm temp_graph temp_graph.png

@@ -65,10 +65,6 @@ Currently, ocd executes the GNU utility objdump and retrieves the list of object
 
 ocd supports decompilation of x86-64 and uses a modification of libdisassemble to disassemble code.
 
-\subsection{Variable inference}
-
-In this phase, instruction operands are substituted with newly assigned names.
-
 \subsection{Control flow analysis}
 
 \subsubsection{Control flow graph generation}
@@ -113,6 +109,29 @@ A cfg of a block of code gives insight into how control flows through the block 
 \end{figure}
 
 Logical structures can be recognized by finding patterns in the cfg. The patterns are listed in figure \ref{fig:cfg_patterns}. The patterns are used to define a decreasing graph rewriting system (not unlike a context-sensitive grammar) in which a single step finds a pattern and contracts it to a single node containing information about the pattern's respective logical structure. Ideally, the fixed point of such a transformation will result in a single node containing the abstract syntax tree of the original program.
+
+\subsection{Data flow analysis}
+
+\subsubsection{Variable inference}
+
+In this phase, instruction operands are substituted with newly assigned names.
+
+\subsection{Computation collapse}
+
+In this phase, the program's computation is analyzed. Dead instructions are removed and others are folded into more coherent expressions. For example,
+
+\begin{verbatim}
+a = a + 1
+b = a * 2
+n = 2
+n = b - a
+\end{verbatim}
+
+might be converted into:
+
+\begin{verbatim}
+n = (a+1)*2-a+1
+\end{verbatim}
 
 \subsection{Program output}
 
