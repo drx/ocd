@@ -53,8 +53,6 @@ if __name__=="__main__":
         functions['start'] = disassemble(binary[text['start']:text['start']+text['length']], text['virt'], sections, binary)
         symbols['start'] = {'start': text['virt'], 'length': text['length']}
 
-    print(functions.keys())
-
     decompiled_functions = decompile_functions(functions, symbols)
 
     print(representation.output_functions(decompiled_functions))
