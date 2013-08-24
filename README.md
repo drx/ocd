@@ -6,7 +6,7 @@
 
 The decompiler tries to infer the program structure, performing control and data flow analysis.
 
-More in-depth documentation is available in the `doc/` directory.
+More in-depth documentation is available in the [doc/ocd.md file](doc/ocd.md).
 
 ## Quick start
 

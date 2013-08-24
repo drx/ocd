@@ -17,9 +17,6 @@ The usage of the program is as follows:
       -g FILE, --graph=FILE
                             output a control flow graph
 
-An example control flow graph is shown below:
-
-![A cfg example](images/cfg_example.png?raw=true)
 
 # Operation
 
@@ -66,15 +63,15 @@ A cfg of a block of code gives insight into how control flows through the block 
     <th colspan="2">CFG patterns</th>
   </tr>
   <tr>
-    <td>![if](images/cfg_if.png?raw=true)</td>
-    <td>![if/else](images/cfg_ifelse.png?raw=true)</td>
+    <td><img src="images/cfg_if.png?raw=true"></td>
+    <td><img src="images/cfg_ifelse.png?raw=true"></td>
   </tr>
   <tr>
     <td>if</td>
     <td>if/else</td>
   <tr>
-    <td>![while](images/cfg_while.png?raw=true)</td>
-    <td>![cons](images/cfg_cons.png?raw=true)</td>
+    <td><img src="images/cfg_while.png?raw=true"></td>
+    <td><img src="images/cfg_cons.png?raw=true"></td>
   </tr>
   <tr>
     <td>while</td>
