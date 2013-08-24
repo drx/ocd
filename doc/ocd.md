@@ -60,6 +60,8 @@ A cfg of a block of code gives insight into how control flows through the block 
 
 <table>
   <tr>
+  </tr>
+  <tr>
     <th colspan="2">CFG patterns</th>
   </tr>
   <tr>
@@ -76,7 +78,7 @@ A cfg of a block of code gives insight into how control flows through the block 
   <tr>
     <td>while</td>
     <td>cons</td>
-  <tr>
+  </tr>
 </table>
 
 Logical structures can be recognized by finding patterns in the cfg. The patterns are listed above. The patterns are used to define a decreasing graph rewriting system (not unlike a context-sensitive grammar) in which a single step finds a pattern and contracts it to a single node containing information about the pattern's respective logical structure. Ideally, the fixed point of such a transformation will result in a single node containing the abstract syntax tree of the original program.
